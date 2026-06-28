@@ -1,5 +1,5 @@
 // Bump CACHE on every version release so clients fetch fresh files.
-var CACHE = "coc-v2.6.0";
+var CACHE = "coc-v2.6.1";
 var FILES = ["./index.html", "./manifest.json", "./icon.png"];
 self.addEventListener("install", function(e) {
   e.waitUntil(caches.open(CACHE).then(function(c) { return c.addAll(FILES); }));

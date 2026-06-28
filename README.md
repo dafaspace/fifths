@@ -21,3 +21,9 @@ Single-file, zero-build, vanilla JS PWA.
 SemVer. Baseline of this repo = **v2.6.0** (consolidated from the
 feature-complete `circle-of-fifths-en-v2.5 (8)` prototype: Tonal/Modal,
 transpose, share, solfège, corrected Neo-Riemannian, PWA wiring).
+
+## Changelog
+- **v2.6.1** — fixed Camelot numbering to the standard wheel (C=8B, was 1B);
+  removed dead code (`NOTES`, `MAJ_IDX`, `MIN_IDX`, `isMinorRing`); share link
+  now also encodes app mode (Tonal/Modal), Camelot/solfège, and light theme.
+- **v2.6.0** — consolidated baseline + PWA wiring.

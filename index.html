@@ -124,7 +124,7 @@ canvas { display: block; width: 100%; cursor: pointer; touch-action: none; }
 </head>
 <body>
 <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-  <h1 style="pointer-events:none;font-size:15px;font-weight:500;color:var(--text2)">Another Circle Of Fifths <span style="font-size:10px;color:var(--text3);font-weight:400">v2.6.0</span></h1>
+  <h1 style="pointer-events:none;font-size:15px;font-weight:500;color:var(--text2)">Another Circle Of Fifths <span style="font-size:10px;color:var(--text3);font-weight:400">v2.6.1</span></h1>
   <button onclick="transpose(-1)" title="Transpose ½ step down" style="background:none;border:1px solid var(--bd2);border-radius:50%;cursor:pointer;width:20px;height:20px;font-size:11px;line-height:1;color:var(--text2);padding:0;flex-shrink:0">&#9660;</button>
   <button onclick="transpose(1)" title="Transpose ½ step up" style="background:none;border:1px solid var(--bd2);border-radius:50%;cursor:pointer;width:20px;height:20px;font-size:11px;line-height:1;color:var(--text2);padding:0;flex-shrink:0">&#9650;</button>
 </div>
@@ -188,7 +188,6 @@ var NOTES_SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B
 var NOTES_FLAT  = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
 var FLAT_SLICES = {7:1, 8:1, 9:1, 10:1, 11:1};
 function notesForSlice(s) { return FLAT_SLICES[s] ? NOTES_FLAT : NOTES_SHARP; }
-var NOTES = NOTES_SHARP;
 // Accidentals per slice
 var ACC      = [0,1,2,3,4,5,6,-5,-4,-3,-2,-1]; // F#=6#, Db=5b...F=1b
 
@@ -210,8 +209,6 @@ var MODES = [
 ];
 // Sorted: major first (light→dark), then minor (light→dark), then dim
 // Ionian=0 Lydian=1 Mixolydian=2 | Dorian=3 Aeolian=4 Phrygian=5 | Locrian=6
-var MAJ_IDX = [0,1,2]; // indices in MODES that are major
-var MIN_IDX = [3,4,5]; // minor
 
 var ROM_MAJ = ['I','II','III','IV','V','VI','VII'];
 var ROM_MIN = ['i','ii','iii','iv','v','vi','vii'];
@@ -250,8 +247,9 @@ var RELS = {
 };
 
 var ALL_REL_KEYS = ['neighbours','minmed','majmed','tritone','dim7','neapolitan','nrlP','nrlR','nrlL'];
-// Camelot: slice C(0)G(1)D(2)A(3)E(4)B(5)F#(6)Db(7)Ab(8)Eb(9)Bb(10)F(11)
-var CAM_MAJ = [1,2,3,4,5,6,7,8,9,10,11,12];
+// Camelot (standard Mixed-In-Key wheel): C=8B, G=9B, D=10B, A=11B, E=12B, B=1B,
+// F#=2B, Db=3B, Ab=4B, Eb=5B, Bb=6B, F=7B. Indexed by slice (C=0,G=1,D=2...F=11).
+var CAM_MAJ = [8,9,10,11,12,1,2,3,4,5,6,7];
 function onToggleCam() {
   if (document.getElementById('cb-camelot').checked)
     document.getElementById('cb-sol').checked = false;
@@ -266,12 +264,11 @@ function onToggleSol() {
 var SOL_NAMES = ['Do','Di','Re','Me','Mi','Fa','Fi','Sol','Le','La','Te','Si'];
 function isSol() { var el=document.getElementById('cb-sol'); return el&&el.checked; }
 function solName(semi) { return SOL_NAMES[((semi%12)+12)%12]; }
-var CAM_MIN = [1,2,3,4,5,6,7,8,9,10,11,12]; // relative minor = same number as major
+var CAM_MIN = [8,9,10,11,12,1,2,3,4,5,6,7]; // relative minor shares its major's number (Am=8A, C=8B)
 function camelot(slice, isMinor) {
   return (isMinor ? CAM_MIN[slice] : CAM_MAJ[slice]) + (isMinor?'A':'B');
 }
 function isCamelot() { var el=document.getElementById('cb-camelot'); return el&&el.checked; }
-function isMinorRing() { var el=document.getElementById('cb-minor'); return el&&el.checked; }
 function toggleTheme() {
   document.documentElement.classList.toggle('light');
   _updateThemeBtn();
@@ -1214,10 +1211,17 @@ function transpose(dir) {
 
 function shareLink() {
   var url = location.href.split('?')[0];
+  var params = [];
   if (selected) {
-    url += '?key=' + selected.slice + '&mode=' + selected.modeIdx
-         + (selected.fromInner ? '&inner=1' : '');
+    params.push('key=' + selected.slice);
+    params.push('mode=' + selected.modeIdx);
+    if (selected.fromInner) params.push('inner=1');
   }
+  if (appMode === 'modal') params.push('app=modal');
+  if (isCamelot()) params.push('cam=1');
+  if (isSol()) params.push('sol=1');
+  if (document.documentElement.classList.contains('light')) params.push('light=1');
+  if (params.length) url += '?' + params.join('&');
   if (navigator.clipboard) {
     navigator.clipboard.writeText(url).then(function() { _flashShare('✓ Copied!'); });
   } else {
@@ -1240,6 +1244,9 @@ function _flashShare(msg) {
 // Read URL params on load
 (function() {
   var p = new URLSearchParams(location.search);
+  if (p.get('light') === '1') document.documentElement.classList.add('light');
+  if (p.get('cam') === '1') { var _c=document.getElementById('cb-camelot'); if(_c) _c.checked = true; }
+  if (p.get('sol') === '1') { var _s=document.getElementById('cb-sol'); if(_s) _s.checked = true; }
   if (p.has('key')) {
     var slice = parseInt(p.get('key'));
     var mode  = parseInt(p.get('mode') || '0');
@@ -1249,6 +1256,7 @@ function _flashShare(msg) {
       lastModeIdx = mode;
     }
   }
+  if (p.get('app') === 'modal') setAppMode('modal');
 })();
 
 window.addEventListener('resize', resize);
