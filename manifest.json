@@ -1,0 +1,19 @@
+{
+  "name": "Another Circle of Fifths",
+  "short_name": "Fifths",
+  "description": "Interactive circle of fifths — keys, modes, chords, Camelot & solfège.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#1c1c1a",
+  "theme_color": "#1c1c1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

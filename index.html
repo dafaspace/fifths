@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Another Circle Of Fifths</title>
+<meta name="description" content="Interactive circle of fifths — keys, modes, chords, Camelot & solfège. A music theory tool.">
+<meta name="theme-color" content="#1c1c1a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fifths">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #1c1c1a; --bg2: #252522; --bg3: #2e2e2a;
+  --text: #e8e6e0; --text2: #9a9890; --text3: #5a5a54;
+  --bd: rgba(255,255,255,0.08); --bd2: rgba(255,255,255,0.15);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+:root.light {
+  --bg: #cec9bc; --bg2: #c2bdb0; --bg3: #b6b1a4;
+  --text: #1a1a18; --text2: #5a5a56; --text3: #9a9a94;
+  --bd: rgba(0,0,0,0.09); --bd2: rgba(0,0,0,0.16);
+}
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; }
+h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
+
+/* Top bar */
+.topbar { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+.mode-switcher { display:flex; gap:2px; margin-bottom:10px; background:var(--bg2); border-radius:20px; padding:2px; width:fit-content; }
+.ms-btn { padding:4px 14px; font-size:12px; border-radius:18px; border:none; background:none; color:var(--text3); cursor:pointer; font-family:var(--font); transition:all .15s; }
+.ms-btn.active { background:var(--text); color:var(--bg); font-weight:500; }
+
+.btn {
+  padding: 5px 12px; font-size: 12px; border-radius: 20px;
+  border: 0.5px solid var(--bd2); background: var(--bg); color: var(--text2);
+  cursor: pointer; font-family: var(--font); transition: all .15s;
+}
+.btn.active { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 500; }
+.btn:hover:not(.active) { background: var(--bg2); }
+.btn-quiz { border-color: #7B5EA7; color: #7B5EA7; }
+.btn-quiz.active { background: #7B5EA7; color: #fff; border-color: #7B5EA7; font-weight: 500; }
+.btn-nrl { padding: 5px 9px; font-size: 12px; border-radius: 20px; border: 0.5px solid var(--bd2); background: var(--bg); color: var(--text2); cursor: pointer; font-family: var(--font); transition: all .15s; }
+.btn-nrl.active { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 500; }
+.btn-nrl:hover:not(.active) { background: var(--bg2); }
+.sep { width: 1px; height: 18px; background: var(--bd2); flex-shrink: 0; }
+.nrl-group { display: flex; gap: 2px; align-items: center; border: 0.5px solid var(--bd2); border-radius: 22px; padding: 2px; }
+
+/* Mode strip */
+.mode-strip-wrap { margin-bottom: 10px; }
+.mode-strip-label { font-size: 10px; color: var(--text3); margin-bottom: 5px; letter-spacing: .05em; }
+.mode-strip { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
+.mode-strip::-webkit-scrollbar { height: 3px; }
+.mode-strip::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+.mbtn {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 6px 9px; border-radius: 9px; cursor: pointer; flex-shrink: 0;
+  border: 0.5px solid var(--bd); background: var(--bg);
+  font-family: var(--font); transition: all .15s; min-width: 0;
+}
+.mbtn:hover { background: var(--bg2); }
+.mbtn.active { background: #404040; border-color: #404040; }
+.mbtn.active .mb-note { color: var(--bg); }
+.mbtn.active .mb-note { color: #fff; }
+.mbtn.active .mb-mode { color: rgba(255,255,255,0.9); }
+.mbtn.active .mb-mood { color: rgba(255,255,255,0.7); }
+.mb-note { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; }
+.mb-mode { font-size: 10px; color: var(--text2); white-space: nowrap; }
+.mb-mood { font-size: 9px; color: var(--text3); white-space: nowrap; }
+.mbtn.active .mb-note { color: #fff !important; }
+.mbtn.active .mb-mode { color: #fff !important; }
+.mbtn.active .mb-mood { color: rgba(255,255,255,0.8) !important; }
+.mode-div { width: 1px; background: var(--bd2); align-self: stretch; flex-shrink: 0; margin: 2px 2px; }
+
+/* Layout */
+.layout { display: grid; grid-template-columns: 1fr 256px; gap: 12px; align-items: start; }
+@media (max-width: 620px) { .layout { grid-template-columns: 1fr; } }
+canvas { display: block; width: 100%; cursor: pointer; touch-action: none; }
+.dot-legend { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.dl { display: flex; align-items: center; font-size: 10px; color: var(--text2); }
+.sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; flex-shrink: 0; }
+
+/* Panel */
+.panel { border: 0.5px solid var(--bd); border-radius: 12px; overflow: hidden; background: var(--bg); }
+.phead { padding: 9px 13px; border-bottom: 0.5px solid var(--bd); font-size: 12px; font-weight: 500; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.pbody { padding: 11px 13px; }
+.key-big { font-size: 22px; font-weight: 500; line-height: 1; color: var(--text); }
+.key-sub { font-size: 11px; color: var(--text3); margin: 2px 0 0; }
+.ctx-line { font-size: 11px; color: var(--text2); height: 17px; margin: 4px 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ctx-line strong { color: var(--text); font-weight: 500; }
+.slabel { font-size: 10px; font-weight: 500; color: var(--text3); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 5px; }
+.scale-row { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 11px; }
+.sn { width: 26px; height: 24px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; border: 0.5px solid var(--bd); background: var(--bg2); color: var(--text2); }
+.sn.root { border: none; color: #fff; }
+.chord-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 3px; margin-bottom: 11px; }
+.cp { border-radius: 6px; padding: 4px 2px; text-align: center; font-size: 11px; font-weight: 500; }
+.cp span { font-size: 9px; display: block; opacity: .6; }
+.rel-desc { font-size: 10px; color: var(--text3); margin-bottom: 6px; line-height: 1.4; }
+.hl-list { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 11px; }
+.hl-pill { padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; color: #fff; }
+.nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-bottom: 11px; }
+.ni { border-radius: 7px; padding: 6px 8px; cursor: pointer; border: 0.5px solid var(--bd); background: var(--bg2); transition: background .12s; }
+.ni:hover { background: var(--bg3); }
+.nl { font-size: 10px; color: var(--text3); }
+.nk { font-size: 11px; font-weight: 500; color: var(--text); }
+.sec-dom { margin-bottom: 11px; }
+.sd-list { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.sd-item { font-size: 10px; padding: 3px 7px; border-radius: 6px; background: var(--bg2); border: 0.5px solid var(--bd); color: var(--text2); }
+.empty { font-size: 13px; color: var(--text3); padding: 4px 0; }
+
+/* Quiz */
+.qo { padding: 8px 11px; border-radius: 8px; font-size: 12px; border: 0.5px solid var(--bd2); background: var(--bg); color: var(--text); cursor: pointer; text-align: left; font-family: var(--font); width: 100%; display: block; margin-bottom: 4px; }
+.qo:hover:not(:disabled) { background: var(--bg2); }
+.qo.correct { background: #eaf3de; border-color: #639922; color: #3B6D11; }
+.qo.wrong { background: #fcebeb; border-color: #E24B4A; color: #A32D2D; }
+.qo:disabled { cursor: default; }
+.quiz-next { margin-top: 9px; padding: 7px 16px; border-radius: 20px; font-size: 12px; border: 0.5px solid var(--bd2); background: var(--bg); color: var(--text2); cursor: pointer; display: none; font-family: var(--font); }
+.quiz-next:hover { background: var(--bg2); }
+.quiz-hint { font-size: 11px; color: var(--text3); margin-top: 7px; display: none; }
+</style>
+</head>
+<body>
+<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+  <h1 style="pointer-events:none;font-size:15px;font-weight:500;color:var(--text2)">Another Circle Of Fifths <span style="font-size:10px;color:var(--text3);font-weight:400">v2.6.0</span></h1>
+  <button onclick="transpose(-1)" title="Transpose ½ step down" style="background:none;border:1px solid var(--bd2);border-radius:50%;cursor:pointer;width:20px;height:20px;font-size:11px;line-height:1;color:var(--text2);padding:0;flex-shrink:0">&#9660;</button>
+  <button onclick="transpose(1)" title="Transpose ½ step up" style="background:none;border:1px solid var(--bd2);border-radius:50%;cursor:pointer;width:20px;height:20px;font-size:11px;line-height:1;color:var(--text2);padding:0;flex-shrink:0">&#9650;</button>
+</div>
+
+<div class="mode-switcher">
+  <button class="ms-btn active" id="ms-tonal" onclick="setAppMode('tonal')">Tonal</button>
+  <button class="ms-btn" id="ms-modal" onclick="setAppMode('modal')">Modal</button>
+</div>
+<div class="topbar">
+  <button class="btn active" id="brel-neighbours"  onclick="setRel('neighbours')">Neighbours</button>
+  <button class="btn"        id="brel-minmed"      onclick="setRel('minmed')">Minor mediant</button>
+  <button class="btn"        id="brel-majmed"      onclick="setRel('majmed')">Major mediant</button>
+  <button class="btn"        id="brel-tritone"     onclick="setRel('tritone')">Tritone</button>
+  <button class="btn"        id="brel-dim7"        onclick="setRel('dim7')">Dim7</button>
+  <button class="btn"        id="brel-neapolitan"  onclick="setRel('neapolitan')">Neapolitan</button>
+  <div class="nrl-group">
+    <button class="btn-nrl"  id="brel-nrlP"        onclick="setRel('nrlP')">P</button>
+    <button class="btn-nrl"  id="brel-nrlR"        onclick="setRel('nrlR')">R</button>
+    <button class="btn-nrl"  id="brel-nrlL"        onclick="setRel('nrlL')">L</button>
+  </div>
+  <div class="sep"></div>
+  <button class="btn btn-quiz" id="bm-quiz" onclick="toggleQuiz()">Quiz</button>
+  <label id="minor-label" style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer">
+    <input type="checkbox" id="cb-minor" onchange="render()" checked> minor
+  </label>
+  <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer" title="Camelot DJ notation">
+    <input type="checkbox" id="cb-camelot" onchange="onToggleCam()"> camelot
+  </label>
+  <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer" title="Solfège notation (Do Re Mi)">
+    <input type="checkbox" id="cb-sol" onchange="onToggleSol()"> solfège
+  </label>
+  <button id="btn-sound" onclick="toggleSound()" title="Toggle sound" style="background:none;border:none;cursor:pointer;padding:2px 6px;line-height:1;color:var(--text2)"><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle"><polygon points="1,4.5 4,4.5 7,2 7,12 4,9.5 1,9.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.5 5a2.5 2.5 0 0 1 0 4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+  <button onclick="shareLink()" title="Copy link to this key" style="background:none;border:none;cursor:pointer;padding:2px 6px;line-height:1;color:var(--text2)" id="btn-share"><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle"><path d="M5.5 8.5a3 3 0 0 0 4.2 0l1.5-1.5a3 3 0 0 0-4.2-4.2L6 3.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8.5 5.5a3 3 0 0 0-4.2 0L2.8 7a3 3 0 0 0 4.2 4.2L8 10.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+  <button id="btn-theme" onclick="toggleTheme()" title="Toggle light/dark" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px 6px;line-height:1;color:var(--text3)">&#9790;</button>
+
+</div>
+
+<div class="mode-strip-wrap" style="display:none">
+  <div class="mode-strip" id="modestrip"></div>
+</div>
+
+<div class="layout">
+  <div>
+    <canvas id="c"></canvas>
+    <div class="dot-legend" id="legend"></div>
+  </div>
+  <div class="panel" id="panel">
+    <div class="phead">Info</div>
+    <div class="pbody"><div class="empty">Click a key on the circle</div></div>
+  </div>
+</div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+var MAJSHORT = ['C','G','D','A','E','B','F\u266f','D\u266d','A\u266d','E\u266d','B\u266d','F'];
+var MINNAMES = ['Am','Em','Bm','F\u266fm','C\u266fm','G\u266fm','D\u266fm','B\u266dm','Fm','Cm','Gm','Dm'];
+var SYNTH    = ['#C8282A','#D95C18','#C8A000','#2A8C40','#2898BC','#2450B8','#5230BC','#8228BC','#A040A0','#B85878','#B03858','#8C1420'];
+// Root in semitones for each circle position
+var MROOT    = [0,7,2,9,4,11,6,1,8,3,10,5];
+var NOTES_SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+var NOTES_FLAT  = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+var FLAT_SLICES = {7:1, 8:1, 9:1, 10:1, 11:1};
+function notesForSlice(s) { return FLAT_SLICES[s] ? NOTES_FLAT : NOTES_SHARP; }
+var NOTES = NOTES_SHARP;
+// Accidentals per slice
+var ACC      = [0,1,2,3,4,5,6,-5,-4,-3,-2,-1]; // F#=6#, Db=5b...F=1b
+
+function accStr(i) {
+  var n = ACC[i];
+  if (!n) return '';
+  return n > 0 ? n + '\u266f' : Math.abs(n) + '\u266d';
+}
+
+// 7 modes: off = semitones above parent major tonic
+var MODES = [
+  { name:'Ionian',     mood:'Bright',   type:'maj', iv:[0,2,4,5,7,9,11], ct:['maj','min','min','maj','maj','min','dim'], off:0  },
+  { name:'Lydian',     mood:'Dreamy',   type:'maj', iv:[0,2,4,6,7,9,11], ct:['maj','maj','min','dim','maj','min','min'], off:5  },
+  { name:'Mixolydian', mood:'Groovy',   type:'maj', iv:[0,2,4,5,7,9,10], ct:['maj','min','dim','maj','min','min','maj'], off:7  },
+  { name:'Dorian',     mood:'Soulful',  type:'min', iv:[0,2,3,5,7,9,10], ct:['min','min','maj','maj','min','dim','maj'], off:2  },
+  { name:'Aeolian',    mood:'Sad',      type:'min', iv:[0,2,3,5,7,8,10], ct:['min','dim','maj','min','min','maj','maj'], off:9  },
+  { name:'Phrygian',   mood:'Dark',     type:'min', iv:[0,1,3,5,7,8,10], ct:['min','maj','maj','min','dim','maj','min'], off:4  },
+  { name:'Locrian',    mood:'Unstable', type:'dim', iv:[0,1,3,5,6,8,10], ct:['dim','maj','min','min','maj','maj','min'], off:11 },
+];
+// Sorted: major first (light→dark), then minor (light→dark), then dim
+// Ionian=0 Lydian=1 Mixolydian=2 | Dorian=3 Aeolian=4 Phrygian=5 | Locrian=6
+var MAJ_IDX = [0,1,2]; // indices in MODES that are major
+var MIN_IDX = [3,4,5]; // minor
+
+var ROM_MAJ = ['I','II','III','IV','V','VI','VII'];
+var ROM_MIN = ['i','ii','iii','iv','v','vi','vii'];
+
+var CCOL = {
+  maj: { bg:'rgba(0,110,210,.12)', tx:'#1a5a96' },
+  min: { bg:'rgba(20,130,50,.12)',  tx:'#1a6030' },
+  dim: { bg:'rgba(190,40,30,.11)', tx:'#861810' },
+};
+
+// Relations: get(slice) returns array of highlighted slices
+var RELS = {
+  neighbours:  { label:'Neighbours',    desc:'Dominant and subdominant',                 get: function(i){ return [(i+1)%12,(i+11)%12]; } },
+  minmed:      { label:'Minor mediant', desc:'Minor third relation',                      get: function(i){ return [(i+3)%12,(i+9)%12]; } },
+  majmed:      { label:'Major mediant', desc:'Major third relation',                      get: function(i){ return [(i+4)%12,(i+8)%12]; } },
+  tritone:     { label:'Tritone',       desc:'Tritone substitution',                      get: function(i){ return [(i+6)%12]; } },
+  dim7:        { label:'Dim7',          desc:'Diminished 7th pivot',                      get: function(i){ return [(i+3)%12,(i+6)%12,(i+9)%12]; } },
+  neapolitan:  { label:'Neapolitan',    desc:'\u266dII semitone above root',              get: function(i){ return [(i+7)%12]; } },
+  // Neo-Riemannian: operate on the TONAL SLICE, show target slice
+  // P: parallel — same slice (visual no-op on circle, shown in panel)
+  // P: Parallel — same root, major↔minor → same sector on circle
+  nrlP: { label:'Neo-R P', desc:'Parallel — same root, major ↔ minor',
+    getTarget: function(slice, fromInner, actualSlice) {
+      return fromInner ? { sector: actualSlice, inner: false }
+                       : { sector: (slice+9)%12, inner: true };
+    }},
+  nrlR: { label:'Neo-R R', desc:'Relative — same key signature',
+    getTarget: function(slice, fromInner, actualSlice) {
+      return { sector: slice, inner: !fromInner };
+    }},
+  nrlL: { label:'Neo-R L', desc:'Leading-tone exchange',
+    getTarget: function(slice, fromInner, actualSlice) {
+      return fromInner ? { sector: (slice+11)%12, inner: false }
+                       : { sector: (slice+1)%12,  inner: true };
+    }},
+};
+
+var ALL_REL_KEYS = ['neighbours','minmed','majmed','tritone','dim7','neapolitan','nrlP','nrlR','nrlL'];
+// Camelot: slice C(0)G(1)D(2)A(3)E(4)B(5)F#(6)Db(7)Ab(8)Eb(9)Bb(10)F(11)
+var CAM_MAJ = [1,2,3,4,5,6,7,8,9,10,11,12];
+function onToggleCam() {
+  if (document.getElementById('cb-camelot').checked)
+    document.getElementById('cb-sol').checked = false;
+  render(); updatePanel();
+}
+function onToggleSol() {
+  if (document.getElementById('cb-sol').checked)
+    document.getElementById('cb-camelot').checked = false;
+  render(); updatePanel();
+}
+// Solfège (Fixed-do): semitone 0-11
+var SOL_NAMES = ['Do','Di','Re','Me','Mi','Fa','Fi','Sol','Le','La','Te','Si'];
+function isSol() { var el=document.getElementById('cb-sol'); return el&&el.checked; }
+function solName(semi) { return SOL_NAMES[((semi%12)+12)%12]; }
+var CAM_MIN = [1,2,3,4,5,6,7,8,9,10,11,12]; // relative minor = same number as major
+function camelot(slice, isMinor) {
+  return (isMinor ? CAM_MIN[slice] : CAM_MAJ[slice]) + (isMinor?'A':'B');
+}
+function isCamelot() { var el=document.getElementById('cb-camelot'); return el&&el.checked; }
+function isMinorRing() { var el=document.getElementById('cb-minor'); return el&&el.checked; }
+function toggleTheme() {
+  document.documentElement.classList.toggle('light');
+  _updateThemeBtn();
+}
+function _updateThemeBtn() {
+  var isLight = document.documentElement.classList.contains('light');
+  var btn = document.getElementById('btn-theme');
+  btn.textContent = isLight ? '☽' : '☀';
+  btn.style.color  = isLight ? '#1c1c1a' : '#e8e3d8';
+}
+window.addEventListener('load', _updateThemeBtn);
+
+// ── State ─────────────────────────────────────────────────────────────────────
+// selected: { slice: 0-11, modeIdx: 0-6 }
+// slice = circle position (same as tonal centre with key signature)
+// modeIdx = which of the 7 modes to show
+var appMode     = 'tonal'; // 'tonal' | 'modal'
+var selected    = null;
+var hovered     = null; // { slice, isInner }
+var activeRel   = 'neighbours';
+var lastModeIdx = 0; // default for next click
+
+var quizMode  = false;
+var quizState = null;
+var quizScore = 0;
+var quizTotal = 0;
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+var cv  = document.getElementById('c');
+var ctx = cv.getContext('2d');
+var W=0, H=0, CX=0, CY=0, R=0;
+
+function resize() {
+  var dpr = devicePixelRatio || 1;
+  var s   = Math.min(cv.parentElement.clientWidth, 500);
+  cv.style.width  = s + 'px';
+  cv.style.height = s + 'px';
+  cv.width  = s * dpr;
+  cv.height = s * dpr;
+  ctx.scale(dpr, dpr);
+  W = H = s; CX = CY = s/2; R = s * 0.50;
+  render();
+}
+
+function ha(hex, a) {
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+function isDark() { return !document.documentElement.classList.contains('light'); }
+
+// Which circle slices belong to the current tonal family (7 notes of the parent major)
+function getScaleSlices(slice, modeIdx) {
+  // Parent major slice
+  var parentSlice = getParentSlice(slice, modeIdx);
+  if (parentSlice === null) parentSlice = slice;
+  // The 7 notes of the parent major are at specific circle positions
+  // In C major (slice 0): C G D A E B F = slices 0,1,2,3,4,5,11 (going around)
+  // Pattern: parent, parent+1, parent+2, parent+3, parent+4, parent+5, parent-1
+  // Actually the 7 diatonic pitches of a major key occupy 7 consecutive positions on the circle
+  var result = [];
+  for (var k = -1; k <= 5; k++) {
+    result.push((parentSlice + k + 12) % 12);
+  }
+  return result;
+}
+
+function getParentSlice(slice, modeIdx) {
+  if (modeIdx === 0) return null; // Ionian is its own parent
+  var parentRoot = (MROOT[slice] - MODES[modeIdx].off + 120) % 12;
+  var ps = MROOT.indexOf(parentRoot);
+  return ps >= 0 ? ps : null;
+}
+
+function render() {
+  ctx.clearRect(0, 0, W, H);
+  var dark      = isDark();
+  var showMinor = appMode === 'tonal' && document.getElementById('cb-minor').checked;
+  var slA       = 2 * Math.PI / 12;
+  var outerR    = R;
+  var innerR    = R * (showMinor ? 0.62 : 0.74);
+  var midR      = R * 0.38;
+  var ff        = getComputedStyle(document.body).fontFamily;
+
+  // Build sets for highlighting
+  var relHL  = {};
+  var prlTargetInner = false;
+  var scaleHL = {};
+  // tonic = the actual tonal centre (parent for non-Ionian modes)
+  if (selected) {
+    // Tonal centre is always selected.slice — use it for scale and relation highlights
+    var _gt = RELS[activeRel].getTarget;
+    if (_gt) {
+      var _fi = !!selected.fromInner;
+      var _m  = MODES[selected.modeIdx];
+      var _as = _fi ? MROOT.indexOf((MROOT[selected.slice]+_m.off)%12) : selected.slice;
+      var _pt = _gt(selected.slice, _fi, _as);
+      if (_pt) { relHL[_pt.sector] = true; prlTargetInner = _pt.inner; }
+    } else {
+      var relFn = RELS[activeRel].get;
+      var relArr = relFn ? relFn(selected.slice) : [];
+      for (var k=0; k<relArr.length; k++) relHL[relArr[k]] = true;
+    }
+    var scArr = getScaleSlices(selected.slice, 0);
+    for (var k=0; k<scArr.length; k++) scaleHL[scArr[k]] = true;
+  }
+  var parentSl = selected ? getParentSlice(selected.slice, selected.modeIdx) : null;
+
+  for (var i = 0; i < 12; i++) {
+    var a0 = (-Math.PI/2) + i*slA - slA/2;
+    var a1 = a0 + slA;
+    var col = SYNTH[i];
+
+    var isSel    = selected && selected.slice === i;
+    var inScale  = !!scaleHL[i];
+    var inRel    = !!relHL[i];
+    var hovOuter = hovered && hovered.slice === i && !hovered.isInner;
+    var hovInner = hovered && hovered.slice === i && hovered.isInner;
+    var faded    = selected && !isSel && !inScale && !inRel;
+
+    // Outer ring — annular (donut), keeps minor area visually clean
+    var selIsInner  = isSel && !!selected.fromInner;
+    var isPRLTarget = inRel && RELS[activeRel].getTarget;
+    var outerIsPRL  = isPRLTarget && !prlTargetInner;
+    var sameSecR    = isSel && !selIsInner && activeRel==='nrlR';
+    ctx.beginPath();
+    ctx.moveTo(CX + Math.cos(a0)*outerR, CY + Math.sin(a0)*outerR);
+    ctx.arc(CX,CY,outerR,a0,a1);
+    ctx.arc(CX,CY,innerR,a1,a0,true);
+    ctx.closePath();
+    var aOuter = (isSel && !selIsInner) ? 0.88
+               : outerIsPRL             ? 0.30
+               : hovOuter ? 0.38 : inScale ? 0.22 : faded ? 0.06 : 0.18;
+    ctx.fillStyle = ha(col, aOuter);
+    ctx.fill();
+    ctx.strokeStyle = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.12)';
+    ctx.lineWidth = 1.2; ctx.stroke();
+
+    // Ring separator
+    ctx.beginPath(); ctx.arc(CX,CY,innerR,a0,a1);
+    ctx.strokeStyle = dark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)';
+    ctx.lineWidth = 1.2; ctx.stroke();
+
+    // Inner ring — annular (midR*0.93 to innerR), leaves acc ring transparent
+    if (showMinor) {
+      ctx.beginPath();
+      ctx.moveTo(CX + Math.cos(a0)*innerR, CY + Math.sin(a0)*innerR);
+      ctx.arc(CX,CY,innerR,a0,a1);
+      ctx.arc(CX,CY,midR*0.93,a1,a0,true);
+      ctx.closePath();
+      var innerIsPRL = isPRLTarget && prlTargetInner;
+      var aInner = selIsInner  ? 0.80
+                 : hovInner    ? 0.28
+                 : sameSecR    ? 0.28
+                 : innerIsPRL  ? 0.30
+                 : faded ? 0.04 : 0.10;
+      ctx.fillStyle = ha(col, aInner);
+      ctx.fill();
+      ctx.strokeStyle = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
+      ctx.lineWidth = 0.8; ctx.stroke();
+    }
+
+    // Accidentals ring — outer arc boundary
+    ctx.beginPath(); ctx.arc(CX,CY,midR*0.93,a0,a1);
+    ctx.strokeStyle = dark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.07)';
+    ctx.lineWidth = 0.6; ctx.stroke();
+
+    // Sector spoke lines through acc ring (from midR*0.93 to centre hole R*0.17)
+    var sA0 = a0; // sector start angle
+    var sA1 = a1; // sector end angle
+    ctx.beginPath();
+    ctx.moveTo(CX + Math.cos(sA0)*R*0.17, CY + Math.sin(sA0)*R*0.17);
+    ctx.lineTo(CX + Math.cos(sA0)*midR*0.93, CY + Math.sin(sA0)*midR*0.93);
+    ctx.strokeStyle = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.10)';
+    ctx.lineWidth = 0.7; ctx.stroke();
+
+    // Relation pulsing dashes on outer edge
+    // R same-sector: dash on opposite ring of selected sector
+    if (isSel && activeRel==='nrlR' && showMinor) {
+      ctx.save();
+      ctx.setLineDash([4,3]);
+      ctx.strokeStyle = dark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.6)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (!selIsInner) { ctx.arc(CX,CY,innerR-1,a0,a1); }
+      else             { ctx.arc(CX,CY,outerR-1,a0,a1); }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+    // PRL target on different sector: dash on target ring
+    if (inRel && !isSel && isPRLTarget) {
+      ctx.save();
+      ctx.setLineDash([5,3]);
+      ctx.strokeStyle = dark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.65)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      if (prlTargetInner && showMinor) { ctx.arc(CX,CY,innerR-1.5,a0,a1); }
+      else                             { ctx.arc(CX,CY,outerR-1.5,a0,a1); }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+    // Other relation modes
+    if (inRel && !isSel && !isPRLTarget) {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(CX,CY,outerR-1.5,a0,a1);
+      ctx.strokeStyle = ha(col, 0.8);
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([5,3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    var midA = (-Math.PI/2) + i*slA;
+    var lR   = (outerR + innerR) / 2;
+
+    // Major label (+ Camelot)
+    var showCam = isCamelot();
+    ctx.save();
+    ctx.translate(CX + Math.cos(midA)*lR, CY + Math.sin(midA)*lR);
+    var mainLabel = showCam ? camelot(i, false) : (isSol() ? solName(MROOT[i]) : MAJSHORT[i]);
+    var selFill   = (isSel && !selIsInner) ? '#fff' : dark ? 'rgba(255,255,255,.72)' : 'rgba(0,0,0,.7)';
+    ctx.font = (isSel ? '500' : '400') + ' ' + Math.max(12, R*0.072) + 'px ' + ff;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = selFill;
+    ctx.fillText(mainLabel, 0, 0);
+    ctx.restore();
+
+    // Minor label (+ Camelot)
+    if (showMinor) {
+      var mR2 = (innerR + midR*0.93) / 2;
+      ctx.save();
+      ctx.translate(CX + Math.cos(midA)*mR2, CY + Math.sin(midA)*mR2);
+      var minMain = showCam ? camelot(i, true) : (isSol() ? solName(MROOT[i]+9) + 'm' : MINNAMES[i]);
+      ctx.font = '400 ' + Math.max(9, R*0.052) + 'px ' + ff;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = selIsInner ? '#fff' : dark ? 'rgba(255,255,255,.48)' : 'rgba(0,0,0,.42)';
+      ctx.fillText(minMain, 0, 0);
+      ctx.restore();
+    }
+
+    // Accidentals (skip C=0, hide in Camelot mode)
+    if (!showCam) {
+      var acc = accStr(i);
+      if (acc) {
+        ctx.save();
+        ctx.translate(CX + Math.cos(midA)*midR*0.70, CY + Math.sin(midA)*midR*0.70);
+        ctx.font = '400 ' + Math.max(8, R*0.042) + 'px ' + ff;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = dark ? 'rgba(255,255,255,.32)' : 'rgba(0,0,0,.28)';
+        ctx.fillText(acc, 0, 0);
+        ctx.restore();
+      }
+    }
+  }
+
+  // Center circle — no fill, just border
+  ctx.beginPath(); ctx.arc(CX,CY,R*0.17,0,Math.PI*2);
+  ctx.strokeStyle= dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
+  ctx.lineWidth  = 0.5; ctx.stroke();
+
+  buildLegend();
+}
+
+function buildLegend() {
+  var html = '';
+  for (var i=0; i<12; i++) {
+    html += '<div class="dl"><span class="sw" style="background:'+SYNTH[i]+'"></span>'+MAJSHORT[i]+'</div>';
+  }
+  document.getElementById('legend').innerHTML = html;
+}
+
+// ── Input ─────────────────────────────────────────────────────────────────────
+function getSlice(x, y) {
+  var dx=x-CX, dy=y-CY, dist=Math.sqrt(dx*dx+dy*dy);
+  var showMinor = appMode === 'tonal' && document.getElementById('cb-minor').checked;
+  var innerR = R*(showMinor ? 0.62 : 0.74);
+  if (dist > R || dist < R*0.38*0.93) return null;
+  var a = Math.atan2(dy,dx)+Math.PI/2;
+  if (a<0) a+=2*Math.PI;
+  var slice = Math.floor(a/(2*Math.PI/12))%12;
+  var isInner = showMinor && dist < innerR;
+  return { slice:slice, isInner:isInner };
+}
+
+function evCoords(e) {
+  var r=cv.getBoundingClientRect(), dpr=devicePixelRatio||1;
+  var sx=cv.width/dpr/r.width, sy=cv.height/dpr/r.height;
+  var src = (e.changedTouches && e.changedTouches.length) ? e.changedTouches[0]
+          : (e.touches && e.touches.length) ? e.touches[0] : e;
+  return { x:(src.clientX-r.left)*sx, y:(src.clientY-r.top)*sy };
+}
+
+function handlePick(h) {
+  if (!h) return;
+  if (quizMode) { handleQuizClick(h.slice); return; }
+
+  var newModeIdx;
+  if (appMode === 'modal') {
+    // Modal: outer ring only, keep current mode (it IS the tonic)
+    newModeIdx = lastModeIdx;
+  } else if (h.isInner) {
+    newModeIdx = 4; // Tonal: Aeolian for inner ring
+  } else {
+    // Tonal: outer ring — keep mode only if major-type
+    newModeIdx = (MODES[lastModeIdx].type === 'maj') ? lastModeIdx : 0;
+  }
+  // slice = sector (tonal centre) — never remap for inner ring
+  if (selected && selected.slice === h.slice && selected.modeIdx === newModeIdx) {
+    selected = null;
+  } else {
+    selected = { slice: h.slice, tonicSlice: h.slice, modeIdx: newModeIdx, fromInner: appMode === 'tonal' ? h.isInner : false };
+    lastModeIdx = newModeIdx;
+    buildModeStrip();
+  }
+  render();
+  updatePanel();
+  if (selected) playTonic(selected.slice, selected.modeIdx, selected.fromInner);
+}
+
+cv.addEventListener('mousemove', function(e) {
+  var c=evCoords(e); hovered=getSlice(c.x,c.y); render();
+  cv.style.cursor = hovered ? 'pointer' : 'default';
+});
+cv.addEventListener('mouseleave', function() { hovered=null; render(); });
+cv.addEventListener('click', function(e) {
+  var c=evCoords(e); handlePick(getSlice(c.x,c.y));
+});
+cv.addEventListener('touchstart', function(e){ e.preventDefault(); }, {passive:false});
+cv.addEventListener('touchend', function(e) {
+  e.preventDefault();
+  var c=evCoords(e); handlePick(getSlice(c.x,c.y));
+});
+
+// ── Mode strip ────────────────────────────────────────────────────────────────
+function getModeDataForSlice(slice, modeIdx) {
+  // The smart strip shows the 7 modes of the parent tonal centre
+  // Each button = a specific note + mode
+  var parentSlice = getParentSlice(slice, modeIdx);
+  if (parentSlice === null) parentSlice = slice;
+  var parentRoot = MROOT[parentSlice];
+  var modes = MODES;
+  var result = [];
+  // All 7 modes from parent major, ordered as in MODES array
+  for (var m=0; m<7; m++) {
+    var noteRoot = (parentRoot + modes[m].off) % 12;
+    var noteSlice = MROOT.indexOf(noteRoot);
+    var noteName = MAJSHORT[noteSlice];
+    result.push({ modeIdx:m, noteName:noteName, noteSlice:noteSlice });
+  }
+  return result;
+}
+
+function buildModeStrip() {
+  var strip = document.getElementById('modestrip');
+  if (!selected) {
+    // No selection: show generic mode names without notes
+    var html = '';
+    for (var m=0; m<7; m++) {
+      var mode = MODES[m];
+      var isActive = m === lastModeIdx;
+      if (m === 3) html += '<div class="mode-div"></div>'; // divider before minor group
+      html += '<button class="mbtn'+(isActive?' active':'') + '" onclick="setModeByBtn('+m+')" title="'+mode.mood+'">'
+        + '<span class="mb-mode">'+mode.name+'</span>'
+        + '<span class="mb-mood">'+mode.mood+'</span>'
+        + '</button>';
+    }
+    strip.innerHTML = html;
+    return;
+  }
+
+  var html = '';
+  if (appMode === 'modal') {
+    // Modal: parallel modes — same tonic note, all 7 modes
+    var tonicName = MAJSHORT[selected.slice];
+    for (var m=0; m<7; m++) {
+      var mode = MODES[m];
+      var isActive = m === selected.modeIdx;
+      if (m === 3) html += '<div class="mode-div"></div>';
+      html += '<button class="mbtn'+(isActive?' active':'') + '" onclick="setModeByBtn('+m+')" title="'+mode.mood+'">'
+        + '<span class="mb-note">'+tonicName+'</span>'
+        + '<span class="mb-mode">'+mode.name+'</span>'
+        + '<span class="mb-mood">'+mode.mood+'</span>'
+        + '</button>';
+    }
+  } else {
+    // Tonal: relative modes — 7 different notes of parent major
+    var tSlice = selected.tonicSlice !== undefined ? selected.tonicSlice : selected.slice;
+    var modeData = getModeDataForSlice(tSlice, 0);
+    for (var m=0; m<7; m++) {
+      var md = modeData[m];
+      var mode = MODES[md.modeIdx];
+      var isActive = md.modeIdx === selected.modeIdx;
+      if (m === 3) html += '<div class="mode-div"></div>';
+      html += '<button class="mbtn'+(isActive?' active':'') + '" onclick="setModeByBtn('+md.modeIdx+')" title="'+mode.mood+'">'
+        + '<span class="mb-note">'+md.noteName+'</span>'
+        + '<span class="mb-mode">'+mode.name+'</span>'
+        + '<span class="mb-mood">'+mode.mood+'</span>'
+        + '</button>';
+    }
+  }
+  strip.innerHTML = html;
+}
+
+function setModeByBtn(modeIdx) {
+  lastModeIdx = modeIdx;
+  if (selected) {
+    selected.modeIdx   = modeIdx;
+    selected.fromInner = false;
+    if (appMode === 'modal') {
+      // Modal: selected note IS the tonic, no parent remapping
+      selected.tonicSlice = selected.slice;
+    }
+  }
+  buildModeStrip();
+  render();
+  updatePanel();
+  if (selected) playModeScale(selected.slice, selected.modeIdx, selected.fromInner);
+}
+window.setModeByBtn = setModeByBtn;
+
+function setRel(r) {
+  activeRel = r;
+  ALL_REL_KEYS.forEach(function(k) {
+    var el = document.getElementById('brel-'+k);
+    if (el) el.classList.toggle('active', k===r);
+  });
+  render();
+  updatePanel();
+}
+window.setRel = setRel;
+
+// ── Panel ─────────────────────────────────────────────────────────────────────
+function getModeChords(slice, modeIdx, tonicSlice) {
+  var m    = MODES[modeIdx];
+  var root = MROOT[slice];
+  var useSol = isSol();
+  var nn   = useSol ? SOL_NAMES : notesForSlice(tonicSlice !== undefined ? tonicSlice : slice);
+  var notes  = [];
+  var chords = [];
+  for (var i=0; i<7; i++) {
+    var nr = (root + m.iv[i]) % 12;
+    notes.push(nn[nr]);
+    var t   = m.ct[i];
+    var num = (t==='min'||t==='dim') ? ROM_MIN[i] : ROM_MAJ[i];
+    chords.push({ name: nn[nr]+(t==='min'?'m':t==='dim'?'°':''), num:num, type:t });
+  }
+  return { notes:notes, chords:chords };
+}
+
+function getSecondaryDominants(slice, tSlice) {
+  var root = MROOT[slice];
+  var nn = notesForSlice(tSlice !== undefined ? tSlice : slice);
+  var iv = MODES[0].iv;
+  var ct = MODES[0].ct;
+  var result = [];
+  for (var i=0; i<7; i++) {
+    var target = ct[i];
+    if (target === 'dim') continue;
+    var targetRoot = (root + iv[i]) % 12;
+    var secDomRoot = (targetRoot + 7) % 12;
+    // Secondary dominant uses sharp names (it's chromatic)
+    var secDomName = NOTES_SHARP[secDomRoot];
+    var targetName = nn[targetRoot] + (target==='min'?'m':'');
+    result.push({ chord: secDomName+'7', resolves: targetName, num: 'V/' + (ct[i]==='min'?ROM_MIN:ROM_MAJ)[i] });
+  }
+  return result;
+}
+
+function updatePanel() {
+  var panel = document.getElementById('panel');
+  if (!selected) {
+    panel.innerHTML = '<div class="phead">Info</div><div class="pbody"><div class="empty">Click a key on the circle</div></div>';
+    return;
+  }
+
+  var slice    = selected.slice;
+  var modeIdx  = selected.modeIdx;
+  var mode     = MODES[modeIdx];
+  var fromInner = !!selected.fromInner;
+
+  // actualSlice = note to display
+  // fromInner=true:  slice=parent sector → compute note via mode.off (E.g. G+Aeolian=E Aeolian)
+  // fromInner=false: slice=actual note   → C+Aeolian=C Aeolian (parallel minor)
+  var actualSlice, accSlice, parentSlice;
+  if (fromInner) {
+    actualSlice = MROOT.indexOf((MROOT[slice] + mode.off) % 12);
+    accSlice    = slice;
+    parentSlice = slice;
+  } else {
+    actualSlice = slice;
+    if (modeIdx === 0) {
+      accSlice    = slice;
+      parentSlice = null;
+    } else {
+      var pRoot   = (MROOT[actualSlice] - mode.off + 120) % 12;
+      parentSlice = MROOT.indexOf(pRoot);
+      accSlice    = parentSlice;
+    }
+  }
+
+  var col     = SYNTH[actualSlice];
+  var acc     = accStr(accSlice);
+  var keyName = (isSol() ? solName(MROOT[actualSlice]) : MAJSHORT[actualSlice]) + ' ' + mode.name;
+  var camLabel = isCamelot() ? ' <span style="font-size:11px;opacity:.55;font-weight:400;margin-left:4px">' + CAM_MAJ[accSlice] + (mode.type==='maj'?'B':'A') + '</span>' : '';
+  var data    = getModeChords(actualSlice, modeIdx, accSlice);
+  var notes   = data.notes;
+  var chords  = data.chords;
+  var ctxHTML = '';
+  if (appMode === 'tonal' && parentSlice !== null && parentSlice !== undefined && modeIdx !== 0) {
+    ctxHTML = MODE_NUMS[modeIdx] + ' mode of <strong>' + MAJSHORT[parentSlice] + ' major</strong>';
+  }
+
+    // Relation highlights
+  var rel    = RELS[activeRel];
+  var _pgt   = rel.getTarget ? rel.getTarget(slice, fromInner, actualSlice) : null;
+  var relArr = _pgt ? [_pgt.sector] : (rel.get ? rel.get(slice) : []);
+
+  // Scale HTML
+  var scaleHTML = '';
+  for (var i=0; i<notes.length; i++) {
+    var _nSemi = MROOT[actualSlice] + MODES[modeIdx].iv[i]; // no %12 — _playNote handles octave
+    scaleHTML += '<div class="sn'+(i===0?' root':'')
+      +'" onclick="playNotePill('+_nSemi+')" style="cursor:pointer'
+      +(i===0?';background:'+col:'')+'">'+notes[i]+'</div>';
+  }
+
+    // Chords HTML
+  var chordsHTML = '';
+  for (var i=0; i<chords.length; i++) {
+    var cc = CCOL[chords[i].type] || CCOL.maj;
+    var _cS = (MROOT[actualSlice] + MODES[modeIdx].iv[i]) % 12;
+    var _cT = chords[i].type;
+    chordsHTML += '<div class="cp" style="background:'+cc.bg+';color:'+cc.tx
+      +';cursor:pointer" onclick="playChordPill('+_cS+',\'' + _cT + '\')"><span>'
+      +chords[i].num+'</span>'+chords[i].name+'</div>';
+  }
+
+    // Highlights HTML
+  var hlHTML = '';
+  if (_pgt) {
+    var curLabel = fromInner ? MINNAMES[slice] : MAJSHORT[slice];
+    var tgtLabel = _pgt.inner ? MINNAMES[_pgt.sector] : MAJSHORT[_pgt.sector];
+    hlHTML += '<span class="hl-pill" style="background:'+SYNTH[actualSlice]+'">'+curLabel+'</span>';
+    hlHTML += '<span class="hl-pill" style="background:'+SYNTH[_pgt.sector]+'">'+tgtLabel+'</span>';
+  } else {
+    for (var i=0; i<relArr.length; i++) {
+      hlHTML += '<span class="hl-pill" style="background:'+SYNTH[relArr[i]]+'">'+MAJSHORT[relArr[i]]+'</span>';
+    }
+  }
+
+  // Quick nav
+  var domSlice   = (accSlice+1)%12;
+  var subSlice   = (accSlice+11)%12;
+  var parIonian  = MAJSHORT[actualSlice] + ' major';
+  var parAeolian = MAJSHORT[actualSlice] + ' minor';
+  var domName    = MAJSHORT[domSlice] + ' ' + mode.name;
+  var subName    = MAJSHORT[subSlice] + ' ' + mode.name;
+
+  // Secondary dominants
+  var sdList = getSecondaryDominants(actualSlice, accSlice);
+  var sdHTML = '';
+  for (var i=0; i<sdList.length; i++) {
+    sdHTML += '<span class="sd-item" title="'+sdList[i].num+' resolves to '+sdList[i].resolves+'">'+sdList[i].chord+'</span>';
+  }
+
+    panel.innerHTML =
+    '<div class="phead"><span class="sw" style="background:'+col+'"></span>'+keyName+camLabel+'</div>' +
+    '<div class="pbody">' +
+      '<div class="key-big">'+keyName+'</div>' +
+      (isCamelot() ? '<div style="font-size:12px;color:var(--text3);margin:-2px 0 4px">Camelot <strong style="color:var(--text2)">'+CAM_MAJ[accSlice]+(MODES[modeIdx].type==='maj'?'B':'A')+'</strong></div>' : '') +
+      (!isCamelot() ? '<div class="key-sub">'+(acc?acc+' \u00b7 ':'')+mode.mood+'</div>' : '<div class="key-sub">'+mode.mood+'</div>') +
+      '<div class="ctx-line">'+ctxHTML+'</div>' +
+
+      '<div class="slabel">Scale</div>' +
+      '<div class="scale-row">'+scaleHTML+'</div>' +
+
+      '<div class="slabel">Diatonic chords</div>' +
+      '<div class="chord-grid">'+chordsHTML+'</div>' +
+
+      '<div class="slabel">'+rel.label+'</div>' +
+      '<div class="rel-desc">'+rel.desc+'</div>' +
+      '<div class="hl-list">'+hlHTML+'</div>' +
+
+      '<div class="slabel">Quick nav</div>' +
+      '<div class="nav-grid">' +
+        '<div class="ni" onclick="goKey('+actualSlice+',0)"><div class="nl">Parallel major</div><div class="nk">'+parIonian+'</div></div>' +
+        '<div class="ni" onclick="goKey('+actualSlice+',4)"><div class="nl">Parallel minor</div><div class="nk">'+parAeolian+'</div></div>' +
+        '<div class="ni" onclick="goKey('+domSlice+','+modeIdx+')"><div class="nl">Dominant</div><div class="nk">'+domName+'</div></div>' +
+        '<div class="ni" onclick="goKey('+subSlice+','+modeIdx+')"><div class="nl">Subdominant</div><div class="nk">'+subName+'</div></div>' +
+      '</div>' +
+
+      '<div class="slabel">Secondary dominants</div>' +
+      '<div class="sec-dom"><div class="sd-list">'+sdHTML+'</div></div>' +
+    '</div>';
+}
+
+var MODE_NUMS = ['I','IV','V','II','VI','III','VII']; // indexed by modeIdx
+
+function goKey(slice, modeIdx) {
+  selected = { slice:slice, tonicSlice:slice, modeIdx:modeIdx, fromInner: false };
+  lastModeIdx = modeIdx;
+  buildModeStrip();
+  render();
+  updatePanel();
+  playTonic(slice, modeIdx, false);
+}
+window.goKey = goKey;
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+function qName(s){return s.replace(/♯/g,'#').replace(/♭/g,'b');}
+var QUIZ = [
+  function(i) {
+    return { q:'How many accidentals does '+qName(MAJSHORT[i])+' major have?', correct:i,
+      opts:shuffled4(i, function(j){ var a=accStr(j); return a||'none'; }) };
+  },
+  function(i) {
+    return { q:'What is the dominant key of '+qName(MAJSHORT[i])+' major?', correct:(i+1)%12,
+      opts:shuffled4((i+1)%12, function(j){ return qName(MAJSHORT[j])+' major'; }) };
+  },
+  function(i) {
+    return { q:'What is the subdominant key of '+qName(MAJSHORT[i])+' major?', correct:(i+11)%12,
+      opts:shuffled4((i+11)%12, function(j){ return qName(MAJSHORT[j])+' major'; }) };
+  },
+  function(i) {
+    return { q:'What is the relative minor of '+qName(MAJSHORT[i])+' major?', correct:i,
+      opts:shuffled4(i, function(j){ return qName(MINNAMES[j]); }) };
+  },
+  function(i) {
+    var ps = MROOT.indexOf((MROOT[i]-2+12)%12);
+    return { q:qName(MAJSHORT[i])+' Dorian is the II mode of which major key?', correct:ps,
+      opts:shuffled4(ps, function(j){ return qName(MAJSHORT[j])+' major'; }) };
+  },
+  function(i) {
+    var ps = MROOT.indexOf((MROOT[i]-7+12)%12);
+    return { q:qName(MAJSHORT[i])+' Mixolydian is the V mode of which major key?', correct:ps,
+      opts:shuffled4(ps, function(j){ return qName(MAJSHORT[j])+' major'; }) };
+  },
+  function(i) {
+    var ps = MROOT.indexOf((MROOT[i]-9+12)%12);
+    return { q:qName(MAJSHORT[i])+' Aeolian is the VI mode of which major key?', correct:ps,
+      opts:shuffled4(ps, function(j){ return qName(MAJSHORT[j])+' major'; }) };
+  },
+  function(i) {
+    return { q:'Which key is a tritone away from '+qName(MAJSHORT[i])+'?', correct:(i+6)%12,
+      opts:shuffled4((i+6)%12, function(j){ return qName(MAJSHORT[j]); }) };
+  },
+  function(i) {
+    return { q:'Name the diatonic V chord in '+qName(MAJSHORT[i])+' major.', correct:(i+1)%12,
+      opts:shuffled4((i+1)%12, function(j){ return qName(MAJSHORT[j]); }) };
+  },
+  // Parallel minor
+  function(i) {
+    return { q:'What is the parallel minor of '+qName(MAJSHORT[i])+' major?', correct:i,
+      opts:shuffled4(i, function(j){ return qName(MINNAMES[j]); }) };
+  },
+  // Parallel major
+  function(i) {
+    return { q:'What is the parallel major of '+qName(MINNAMES[i])+'?', correct:i,
+      opts:shuffled4(i, function(j){ return qName(MAJSHORT[j])+' major'; }) };
+  },
+  // Relative minor — same sector (same key signature)
+  function(i) {
+    return { q:'Relative minor of '+qName(MAJSHORT[i])+' major?', correct:i,
+      opts:shuffled4(i, function(j){ return qName(MINNAMES[j]); }) };
+  },
+  // Relative major — same sector (same key signature)
+  function(i) {
+    return { q:'Relative major of '+qName(MINNAMES[i])+'?', correct:i,
+      opts:shuffled4(i, function(j){ return qName(MAJSHORT[j])+' major'; }) };
+  },
+  // How many sharps (uses i, works for all keys)
+  function(i) {
+    var ACC=[0,1,2,3,4,5,6,-5,-4,-3,-2,-1];
+    var n = ACC[i];
+    var label = n===0 ? 'none' : n>0 ? n+'♯' : Math.abs(n)+'♭';
+    return { q:'How many accidentals in '+qName(MAJSHORT[i])+' major?', correct:i,
+      opts:shuffled4(i, function(j){
+        var a=ACC[j];
+        return a===0?'none':a>0?a+'♯':Math.abs(a)+'♭';
+      }) };
+  },
+  // Lydian: raised degree
+  function(i) {
+    return { q:'Which degree is raised in Lydian compared to major?', correct:i,
+      opts:[ {slice:i,label:'4',isCorrect:true},{slice:(i+1)%12,label:'2',isCorrect:false},
+             {slice:(i+2)%12,label:'6',isCorrect:false},{slice:(i+3)%12,label:'7',isCorrect:false}] };
+  },
+  // Mixolydian: lowered degree
+  function(i) {
+    return { q:'Which degree is lowered in Mixolydian compared to major?', correct:i,
+      opts:[ {slice:i,label:'7',isCorrect:true},{slice:(i+1)%12,label:'3',isCorrect:false},
+             {slice:(i+2)%12,label:'6',isCorrect:false},{slice:(i+3)%12,label:'2',isCorrect:false}] };
+  },
+  // Phrygian: characteristic lowered degree
+  function(i) {
+    return { q:'What makes Phrygian darker than Aeolian?', correct:i,
+      opts:[ {slice:i,label:'Lowered 2nd (b2)',isCorrect:true},{slice:(i+1)%12,label:'Lowered 4th (b4)',isCorrect:false},
+             {slice:(i+2)%12,label:'Lowered 5th (b5)',isCorrect:false},{slice:(i+3)%12,label:'Lowered 6th (b6)',isCorrect:false}] };
+  },
+  function(i) {
+    var target = (i+7)%12; // neapolitan = -5 steps = +7 steps
+    return { q:'What is the Neapolitan (bII) chord in '+qName(MAJSHORT[i])+' major?', correct:target,
+      opts:shuffled4(target, function(j){ return qName(MAJSHORT[j])+' major'; }) };
+  },
+];
+
+function shuffled4(correct, label) {
+  var pool = [correct];
+  while (pool.length < 4) {
+    var r = Math.floor(Math.random()*12);
+    var found = false;
+    for (var k=0;k<pool.length;k++) { if(pool[k]===r){found=true;break;} }
+    if (!found) pool.push(r);
+  }
+  pool.sort(function(){ return Math.random()-0.5; });
+  var out = [];
+  for (var i=0;i<pool.length;i++) out.push({ slice:pool[i], label:label(pool[i]), isCorrect:pool[i]===correct });
+  return out;
+}
+
+function startQuiz() {
+  var i    = Math.floor(Math.random()*12);
+  var type = QUIZ[Math.floor(Math.random()*QUIZ.length)];
+  try {
+    var q = type(i);
+    quizState = { q:q.q, opts:q.opts, correct:q.correct, targetSlice:q.correct, answered:false };
+    renderQuizPanel();
+    selected = null; render();
+  } catch(e) { startQuiz(); }
+}
+
+function renderQuizPanel() {
+  var scoreStr = quizTotal > 0 ? quizScore+' / '+quizTotal : '';
+  var optsHTML = '';
+  for (var i=0;i<quizState.opts.length;i++) {
+    optsHTML += '<button class="qo" id="qo'+i+'" onclick="answerQuiz('+i+')">'+quizState.opts[i].label+'</button>';
+  }
+  document.getElementById('panel').innerHTML =
+    '<div class="phead" style="color:#7B5EA7">\u25b8 Quiz</div>' +
+    '<div class="pbody">' +
+      '<div style="font-size:11px;color:var(--text3);text-align:right;margin-bottom:8px">'+scoreStr+'</div>' +
+      '<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:11px;line-height:1.5">'+quizState.q+'</div>' +
+      optsHTML +
+      '<button class="quiz-next" id="qnext" onclick="startQuiz()">Next \u2192</button>' +
+      '<div class="quiz-hint" id="qhint"></div>' +
+    '</div>';
+}
+
+function answerQuiz(idx) {
+  if (!quizState||quizState.answered) return;
+  quizState.answered = true; quizTotal++;
+  var ok = quizState.opts[idx].isCorrect;
+  if (ok) quizScore++;
+  for (var i=0;i<quizState.opts.length;i++) {
+    var b=document.getElementById('qo'+i); if(!b) continue;
+    b.disabled=true;
+    if (quizState.opts[i].isCorrect) b.classList.add('correct');
+    else if (i===idx) b.classList.add('wrong');
+  }
+  selected = { slice:quizState.targetSlice, modeIdx:0, fromInner:false };
+  render();
+  document.getElementById('qnext').style.display='inline-block';
+  var h=document.getElementById('qhint'); h.style.display='block';
+  h.textContent = ok ? '\u2713 Correct!' : '\u2717 Correct answer highlighted above';
+}
+window.answerQuiz = answerQuiz;
+
+function handleQuizClick(slice) {
+  if (!quizState||quizState.answered) return;
+  for (var i=0;i<quizState.opts.length;i++) {
+    if (quizState.opts[i].slice===slice) { answerQuiz(i); return; }
+  }
+}
+
+function toggleQuiz() {
+  quizMode = !quizMode;
+  document.getElementById('bm-quiz').classList.toggle('active', quizMode);
+  if (quizMode) { quizScore=0; quizTotal=0; startQuiz(); }
+  else { quizState=null; selected=null; render(); updatePanel(); }
+}
+window.toggleQuiz = toggleQuiz;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildModeStrip();
+
+// ── Audio ─────────────────────────────────────────────────────────────────────
+var _audioCtx = null;
+var _soundOn  = true;
+
+function toggleSound() {
+  _soundOn = !_soundOn;
+  var btn = document.getElementById('btn-sound');
+  btn.innerHTML = _soundOn
+    ? '<svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle"><polygon points="1,4.5 4,4.5 7,2 7,12 4,9.5 1,9.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.5 5a2.5 2.5 0 0 1 0 4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle"><polygon points="1,4.5 4,4.5 7,2 7,12 4,9.5 1,9.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><line x1="9.5" y1="5" x2="12" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="12" y1="5" x2="9.5" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+}
+
+function _getCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+function _withCtx(fn) {
+  var ctx = _getCtx();
+  if (ctx.state === 'suspended') {
+    ctx.resume().then(fn);
+  } else {
+    fn();
+  }
+}
+
+// Semitone → frequency (C4=261.63)
+var _FREQ = [261.63,277.18,293.66,311.13,329.63,349.23,369.99,392.00,415.30,440.00,466.16,493.88];
+
+function _playNote(semi, when, dur, baseOct) {
+  // semi can be > 11 (e.g. 14 = D above middle C region)
+  // baseOct is the octave for semitone 0 (C)
+  var b   = baseOct !== undefined ? baseOct : 4;
+  var oct = b + Math.floor(semi / 12);
+  var note = ((semi % 12) + 12) % 12;
+  var ctx  = _getCtx();
+  var osc  = ctx.createOscillator();
+  var gain = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = _FREQ[note] * Math.pow(2, oct - 4);
+  gain.gain.setValueAtTime(0, when);
+  gain.gain.linearRampToValueAtTime(0.18, when + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.001, when + dur);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(when); osc.stop(when + dur + 0.05);
+}
+
+function _playArp(semis, oct) {
+  if (!_soundOn) return;
+  _withCtx(function() {
+    var ctx = _getCtx();
+    var now = ctx.currentTime + 0.05;
+    var gap = 0.11;
+    var dur = 1.3;
+    // Play ascending, no repeated note
+    semis.forEach(function(s,i){ _playNote(s, now+i*gap, dur, oct||4); });
+  });
+}
+
+function _triad(root, type) {
+  // root is 0-11 (semitone within octave)
+  // return intervals relative to C (so _playNote with baseOct=4 gives correct pitches)
+  if (type==='maj') return [root, root+4, root+7];
+  if (type==='min') return [root, root+3, root+7];
+  if (type==='dim') return [root, root+3, root+6];
+  return [root, root+4, root+7];
+}
+
+// Called on any tonic selection
+function playTonic(slice, modeIdx, fromInner) {
+  if (!_soundOn) return;
+  var mode = MODES[modeIdx];
+  var as   = fromInner ? MROOT.indexOf((MROOT[slice]+mode.off)%12) : slice;
+  var root = MROOT[as];
+  _playArp(_triad(root, mode.ct[0]), 4);
+}
+
+// Called when clicking a diatonic chord pill
+function playChordPill(semi, type) {
+  if (!_soundOn) return;
+  _playArp(_triad(semi, type), 4);
+}
+
+// Play mode scale ascending — highlights characteristic note of each mode
+function playModeScale(slice, modeIdx, fromInner) {
+  if (!_soundOn) return;
+  var mode = MODES[modeIdx];
+  var as   = fromInner ? MROOT.indexOf((MROOT[slice]+mode.off)%12) : slice;
+  var root = MROOT[as]; // 0-11
+  _withCtx(function() {
+    var ctx = _getCtx();
+    var now = ctx.currentTime + 0.05;
+    var gap = 0.20;
+    var dur = 0.9;
+    // root + mode.iv gives ascending semitones from root
+    // e.g. G(7) Ionian: [7,9,11,12,14,16,18]
+    // _playNote with baseOct=4: floor(7/12)=0→G4, floor(12/12)=1→C5 ✓
+    mode.iv.forEach(function(interval, i) {
+      _playNote(root + interval, now + i*gap, dur, 4);
+    });
+    // Root note one octave up (12 semitones = oct+1)
+    _playNote(root + 12, now + mode.iv.length*gap, dur*1.3, 4);
+  });
+}
+
+// Called when clicking a scale note
+function playNotePill(semi) {
+  if (!_soundOn) return;
+  _withCtx(function() {
+    var ctx = _getCtx();
+    // semi is 0-11, play in octave 4 always
+    _playNote(semi, ctx.currentTime+0.05, 1.2, 4);
+  });
+}
+
+
+
+// ── App Mode (Tonal / Modal) ──────────────────────────────────────────────────
+function setAppMode(mode) {
+  appMode = mode;
+  // Update switcher buttons
+  document.getElementById('ms-tonal').classList.toggle('active', mode === 'tonal');
+  document.getElementById('ms-modal').classList.toggle('active', mode === 'modal');
+  // Show/hide minor checkbox (only in tonal mode)
+  var minorLabel = document.getElementById('minor-label');
+  if (minorLabel) minorLabel.style.display = mode === 'tonal' ? '' : 'none';
+  // Show/hide mode strip (only in modal mode)
+  var stripWrap = document.querySelector('.mode-strip-wrap');
+  if (stripWrap) stripWrap.style.display = mode === 'modal' ? '' : 'none';
+  // Reset selection to avoid stale fromInner state
+  if (selected) { selected.fromInner = false; }
+  lastModeIdx = mode === 'modal' ? lastModeIdx : (MODES[lastModeIdx].type === 'maj' ? lastModeIdx : 0);
+  buildModeStrip();
+  render();
+  updatePanel();
+}
+
+// ── Transpose & Share ─────────────────────────────────────────────────────────
+function transpose(dir) {
+  if (!selected) return;
+  // Move by semitone: find slice whose MROOT is current+dir
+  var curSemi  = MROOT[selected.slice];
+  var newSemi  = (curSemi + dir + 12) % 12;
+  var newSlice = MROOT.indexOf(newSemi);
+  selected.slice      = newSlice;
+  selected.tonicSlice = newSlice;
+  lastModeIdx = selected.modeIdx;
+  buildModeStrip();
+  render();
+  updatePanel();
+  playTonic(selected.slice, selected.modeIdx, selected.fromInner);
+}
+
+function shareLink() {
+  var url = location.href.split('?')[0];
+  if (selected) {
+    url += '?key=' + selected.slice + '&mode=' + selected.modeIdx
+         + (selected.fromInner ? '&inner=1' : '');
+  }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function() { _flashShare('✓ Copied!'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = url; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    _flashShare('✓ Copied!');
+  }
+}
+
+function _flashShare(msg) {
+  var btn = document.getElementById('btn-share');
+  var orig = btn.innerHTML;
+  btn.innerHTML = msg;
+  btn.style.fontSize = '10px';
+  setTimeout(function(){ btn.innerHTML = orig; btn.style.fontSize = '13px'; }, 1500);
+}
+
+// Read URL params on load
+(function() {
+  var p = new URLSearchParams(location.search);
+  if (p.has('key')) {
+    var slice = parseInt(p.get('key'));
+    var mode  = parseInt(p.get('mode') || '0');
+    var inner = p.get('inner') === '1';
+    if (slice >= 0 && slice < 12 && mode >= 0 && mode < 7) {
+      selected    = { slice: slice, tonicSlice: slice, modeIdx: mode, fromInner: inner };
+      lastModeIdx = mode;
+    }
+  }
+})();
+
+window.addEventListener('resize', resize);
+function initResize() {
+  var w = cv.parentElement ? cv.parentElement.clientWidth : 0;
+  if (w > 0) { resize(); if(selected){ buildModeStrip(); updatePanel(); } }
+  else { setTimeout(initResize, 50); }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(initResize, 0); });
+} else { setTimeout(initResize, 0); }
+
+// ── Service worker (PWA) ────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
