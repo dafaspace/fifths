@@ -95,8 +95,8 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 .sugg-card:hover { background:var(--bg3); }
 .sugg-key { font-size:13px; font-weight:500; color:var(--text); }
 .sugg-cam { font-size:10px; color:var(--text3); }
-.sugg-why { font-size:10px; color:var(--text2); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-.sugg-tag { font-size:9px; font-weight:600; color:#fff; padding:1px 7px; border-radius:10px; background:hsl(var(--t) 52% 44%); justify-self:end; white-space:nowrap; }
+.sugg-bright { font-size:10px; color:var(--text2); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.sugg-hard { font-size:9px; font-weight:600; color:var(--text2); padding:1px 7px; border-radius:10px; background:var(--bg); border:0.5px solid var(--bd2); justify-self:end; white-space:nowrap; }
 .recipe-hint { font-size:10px; color:var(--text3); padding:6px 2px 2px; display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
 .rh-dot { opacity:0.4; }
 
@@ -152,7 +152,9 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
   .panel { flex: 1 1 auto; min-height: 0; }
   .dot-legend { margin-top: 5px; }
 }
-canvas { display: block; width: 100%; cursor: pointer; touch-action: none; }
+/* margin auto centers the circle when resize() shrinks it below the column width
+   (e.g. Modal, where the mode strip eats height) - otherwise it left-aligns. */
+canvas { display: block; width: 100%; margin-left: auto; margin-right: auto; cursor: pointer; touch-action: none; }
 .dot-legend { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
 .dl { display: flex; align-items: center; font-size: 10px; color: var(--text2); }
 .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; flex-shrink: 0; }
@@ -203,7 +205,7 @@ canvas { display: block; width: 100%; cursor: pointer; touch-action: none; }
 </head>
 <body>
 <div class="appbar">
-  <h1 style="pointer-events:none">Another Circle Of Fifths <span style="font-size:10px;color:var(--text3);font-weight:400">v2.7.1</span></h1>
+  <h1 style="pointer-events:none">Another Circle Of Fifths <span style="font-size:10px;color:var(--text3);font-weight:400">v2.7.2</span></h1>
   <div style="flex:1"></div>
   <div class="util">
     <button class="util-btn" id="bm-quiz" onclick="toggleQuiz()" title="Ear-training quiz" aria-label="Quiz"><svg width="15" height="15" viewBox="0 0 16 16" style="vertical-align:middle"><path d="M8 2.5 1.5 5 8 7.5 14.5 5 8 2.5z" fill="currentColor"/><path d="M4 6.4V9.5c0 1 8 1 8 0V6.4M14 5.2v3.3" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg></button>
@@ -433,12 +435,20 @@ function resize() {
     var availH = window.innerHeight - top - below - 24;
     if (availH > 160) s = Math.min(s, availH);
   } else {
-    // Mobile: give the circle about half the space under the header so the panel
-    // below it still fits without the page scrolling.
+    // Mobile: PANEL-FIRST sizing (option A - no scroll). Measure the panel's true
+    // content height and give the circle only the leftover, so the panel fits
+    // without scrolling. Clamp so the circle never vanishes or dominates; if the
+    // panel is genuinely taller than the screen, the circle hits its floor and the
+    // panel's own overflow is the last-resort fallback.
     var lay = cv.closest('.layout');
     if (lay) {
       var avail = window.innerHeight - lay.getBoundingClientRect().top - 12;
-      s = Math.min(s, Math.max(210, avail * 0.5));
+      var panel = document.getElementById('panel');
+      var head  = panel ? panel.querySelector('.phead') : null;
+      var body  = panel ? panel.querySelector('.pbody') : null;
+      var need  = (head ? head.offsetHeight : 0) + (body ? body.scrollHeight : 0) + 4;
+      var leftover = need > 4 ? (avail - need - 8) : avail * 0.5;
+      s = Math.min(s, Math.max(170, Math.min(leftover, avail * 0.55)));
     }
   }
   cv.style.width  = s + 'px';
@@ -1398,17 +1408,17 @@ var EMOTIONS = [
    roman:'i - IV - ♭VII - i',        device:'acoustic piano or guitar, major IV over minor i',
    rhythm:'gentle and flowing, 3/4', bpmLo:55,  bpmHi:85,  traj:'reflective, unresolved longing'},
   // Neutral valence — high arousal
-  {name:'Running',   hue:185, quality:'min', mode:4, ar:0.9,  vl:0,
+  {name:'Running',   hue:185, quality:'min', mode:4, ar:0.9,  vl:0, flex:1,
    roman:'i - ♭VII - ♭VI - v',       device:'driving 8th-note motor, full rhythm section',
    rhythm:'constant energetic groove', bpmLo:130, bpmHi:165, traj:'sustained neutral energy, no narrative peak'},
   // Positive valence — low to high arousal
   {name:'Romantic',  hue:340, quality:'maj', mode:0, ar:0.3,  vl:1,
    roman:'I - V - vi - IV',          device:'lyrical strings or piano, legato phrasing',
    rhythm:'flowing moderate, rubato', bpmLo:55,  bpmHi:90,  traj:'yearning rise and fall, tender'},
-  {name:'Hopeful',   hue:158, quality:'maj', mode:1, ar:0.35, vl:1,
+  {name:'Hopeful',   hue:158, quality:'maj', mode:1, ar:0.35, vl:1, flex:1,
    roman:'I - V - II - I',           device:'ascending phrases, gradual swell',
    rhythm:'sparse to fuller, building', bpmLo:70, bpmHi:100, traj:'forward-looking, builds toward light'},
-  {name:'Quirky',    hue:48,  quality:'maj', mode:1, ar:0.6,  vl:1,
+  {name:'Quirky',    hue:48,  quality:'maj', mode:1, ar:0.6,  vl:1, flex:1,
    roman:'I - ♭VII - IV - II',       device:'pizzicato, woodwinds, unexpected turns',
    rhythm:'syncopation, odd accents', bpmLo:100, bpmHi:145, traj:'unpredictable, playful'},
   {name:'Happy',     hue:45,  quality:'maj', mode:0, ar:0.25, vl:1,
@@ -1454,32 +1464,46 @@ function smoothWhy(cs,cm,ts,tm){
   if(d===3) return 'distant - clear colour shift';
   return 'far - bold jump';
 }
-// How comfortable the cut is, in plain words (not DJ jargon).
-function spliceTag(sp){
-  return {tag: sp>=90?'perfect':sp>=78?'smooth':sp>=55?'easy':sp>=42?'bold':'far',
-          th : sp>=78?150:sp>=55?90:sp>=42?32:0};
+// ── Two honest, transposable axes of a key-move (see emotion-design notes) ──────
+// A move carries exactly two things: a BRIGHTNESS shift (direction) and a JOIN
+// hardness (magnitude). No emotion word lives on the move - emotion is the tile.
+
+// AXIS 1 - brightness: how the light shifts. Sharp side = brighter, flat = darker;
+// major brighter than minor. Signed delta -> one word, no good/bad colouring.
+function brightShift(cs,cm,ts,tm){
+  var f=((ts-cs+6)%12)-6;                 // signed fifths: + sharp/bright, - flat/dark
+  return ((tm?-1:1)+f) - (cm?-1:1);       // brightness delta
 }
-// The FEELING of the move, in emotion-first language (brighter / warmer / darker),
-// not key-distance jargon. Sharp side = brighter, flat side = warmer; a major<->minor
-// flip pulls toward lighter/darker.
-// One consistent axis: musical brightness (sharp side brighter, flat side darker;
-// major brighter than minor). Symmetric brighter <-> darker, no mixed metaphors.
 function moveMood(cs,cm,ts,tm){
-  var f=((ts-cs+6)%12)-6;        // signed fifths: + sharp/bright, - flat/dark
-  var bcur=(cm?-1:1), btar=(tm?-1:1)+f;
-  var d=btar-bcur;               // brightness delta
+  var d=brightShift(cs,cm,ts,tm);
   if(d>=3)    return 'much brighter';
   if(d>=0.8)  return 'brighter';
-  if(d>-0.8)  return 'similar';
+  if(d>-0.8)  return 'same light';
   if(d>-3)    return 'darker';
   return 'much darker';
 }
-// Pitch shift label (for Feelings mode cards): "+3 st", "-2 st", "same pitch".
-// Shows how far you'd need to pitch-shift a track to reach this key.
-function pitchLabel(cs,ts){
-  var semi=(MROOT[ts]-MROOT[cs]+12)%12; if(semi>6) semi-=12;
-  return semi===0 ? 'same pitch' : (semi>0?'+':'')+semi+' st';
+// AXIS 2 - join hardness: how big the seam is, measured in REALITY = how many of
+// the 7 scale notes change (0..5). Grounded in closely-related keys: the 5 nearest
+// keys = Seamless (relative, 0 notes) + Soft (the four, 1 note); past the family it
+// gets harder. Two ends are off-axis poles on the video-editing metaphor:
+// Seamless = dissolve / no seam, Cut = hard rez / scene change.
+// A key's scale-collection depends only on its SLICE (key signature) - relative
+// major & minor share the same seven notes, so a minor key sits at its relative
+// major's slice. Hence "notes that change" is a function of the two slices alone;
+// the major/minor flip is carried by the brightness axis, not the join.
+var _MAJ_IV=[0,2,4,5,7,9,11];
+function keyMask(slice){
+  var root=MROOT[slice], m=0;
+  for(var i=0;i<7;i++) m|=1<<((root+_MAJ_IV[i])%12);
+  return m;
 }
+function notesChanged(cs,ts){
+  var a=keyMask(cs), b=keyMask(ts), sh=0;
+  for(var i=0;i<12;i++) if((a&(1<<i))&&(b&(1<<i))) sh++;
+  return 7-sh;                             // 0..5
+}
+var HARDWORDS=['Seamless','Soft','Medium','Hard','Very Hard','Cut'];
+function hardLabel(cs,ts){ return HARDWORDS[Math.min(5,notesChanged(cs,ts))]; }
 // Technical detail kept for the hover tooltip (pitch shift + modal colour).
 function moveTip(cs,cm,ts,tm,modeLabel){
   var semi=(MROOT[ts]-MROOT[cs]+12)%12; if(semi>6) semi-=12;
@@ -1488,40 +1512,42 @@ function moveTip(cs,cm,ts,tm,modeLabel){
 }
 function assistSuggest(cs,cm,emoIdx){
   var emo = emoIdx===null ? null : EMOTIONS[emoIdx];
-  var wantMin = emo ? (emo.quality==='min') : null;
+  // Candidates are key AREAS (slices), each VOICED in the emotion's quality - so a
+  // sad emotion suggests Em (not its major twin G), and the same area never appears
+  // twice. No slice is ever excluded (every key is reachable); the quality is just
+  // how we name/voice it. Bi-modal emotions (Hopeful/Running/Quirky) offer BOTH
+  // voicings, since they genuinely live in major and minor alike.
+  var quals = !emo ? [false,true]
+            : emo.flex ? [false,true]
+            : [emo.quality==='min'];
   var rows=[];
   for(var ts=0;ts<12;ts++){
-    var quals = wantMin===null ? [false,true] : [wantMin];
     for(var qi=0;qi<quals.length;qi++){
       var tm=quals[qi];
       if(ts===cs&&tm===cm) continue; // skip the identical key
-      var d=Math.min((ts-cs+12)%12,(cs-ts+12)%12); // 0..6 fifths away
+      var dCirc=Math.min((ts-cs+12)%12,(cs-ts+12)%12); // 0..6 fifths away
       var splice=smoothScore(cs,cm,ts,tm);
       var score=splice;
       if(emo){
-        // Arousal sets the preferred travel distance: calm hugs neighbours,
-        // intense reaches for bolder jumps. Reward keys near that distance so
-        // each emotion produces its own ordering even at the same quality.
-        var want = emo.ar*4;                 // calm→~0-1 fifths, intense→~3-4
-        var miss = Math.abs(d-want);
-        score = splice*0.55 + (100-miss*22)*0.45;
+        // Target brightness from valence (bright emotion pulls toward brighter
+        // keys, dark toward darker) + preferred travel distance from arousal.
+        // Both are soft nudges, blended with splice smoothness.
+        var bWant=(emo.vl||0)*3;                       // -3 dark .. +3 bright
+        var bMatch=100-Math.abs(brightShift(cs,cm,ts,tm)-bWant)*12;
+        var dMatch=100-Math.abs(dCirc-emo.ar*4)*16;    // arousal -> distance
+        score = splice*0.4 + bMatch*0.35 + dMatch*0.25;
       }
-      rows.push({slice:ts,min:tm,score:score,splice:splice});
+      rows.push({slice:ts,min:tm,score:score});
     }
   }
   rows.sort(function(a,b){return b.score-a.score;});
   return rows.slice(0,4).map(function(s){
-    var t=spliceTag(s.splice), ml=emo?MODES[emo.mode].name:'';
-    // Feelings mode: show pitch shift (unique per card, useful for library pitch-shifting).
-    // No emotion selected: show brightness delta (brighter/darker).
-    var why = emo ? pitchLabel(cs,s.slice) : moveMood(cs,cm,s.slice,s.min);
-    // Tooltip: brightness character + pitch shift + modal colour (all three).
-    var tip = emo
-      ? moveMood(cs,cm,s.slice,s.min)+' · '+pitchLabel(cs,s.slice)+(ml?' · '+ml+' colour':'')
-      : moveTip(cs,cm,s.slice,s.min,ml);
+    var ml=emo?MODES[emo.mode].name:'';
     return {slice:s.slice,min:s.min,name:(s.min?MINNAMES[s.slice]:MAJSHORT[s.slice]),
-      cam:camelot(s.slice,s.min),tag:t.tag,th:t.th,
-      why:why, tip:tip,
+      cam:camelot(s.slice,s.min),
+      bright:moveMood(cs,cm,s.slice,s.min),       // axis 1: brighter / darker
+      hard:hardLabel(cs,s.slice),                  // axis 2: Seamless .. Cut
+      tip:moveTip(cs,cm,s.slice,s.min,ml),
       modeIdx: emo?emo.mode:(s.min?4:0), modeLabel: ml};
   });
 }
@@ -1529,10 +1555,11 @@ function assistSuggest(cs,cm,emoIdx){
 function djSuggest(cs,cm,moveIdx){
   var targets=DJMOVES[moveIdx].fn(cs,cm);
   return targets.map(function(tg){
-    var splice=smoothScore(cs,cm,tg.slice,tg.min), t=spliceTag(splice);
     return {slice:tg.slice,min:tg.min,name:(tg.min?MINNAMES[tg.slice]:MAJSHORT[tg.slice]),
-      cam:camelot(tg.slice,tg.min),tag:t.tag,th:t.th,
-      why:moveMood(cs,cm,tg.slice,tg.min), tip:moveTip(cs,cm,tg.slice,tg.min,''),
+      cam:camelot(tg.slice,tg.min),
+      bright:moveMood(cs,cm,tg.slice,tg.min),
+      hard:hardLabel(cs,tg.slice),
+      tip:moveTip(cs,cm,tg.slice,tg.min,''),
       modeIdx:(tg.min?4:0), modeLabel:''};
   });
 }
@@ -1601,14 +1628,17 @@ function renderAssistPanel(){
       for(var j=0;j<sg.length;j++){ var s=sg[j];
         h+='<button class="sugg-card" title="'+s.tip+'" onclick="assistPick('+s.slice+','+(s.min?1:0)+','+s.modeIdx+')">'
           +'<span class="sugg-key">'+s.name+'</span><span class="sugg-cam">'+s.cam+'</span>'
-          +'<span class="sugg-why">'+s.why+'</span>'
-          +'<span class="sugg-tag" style="--t:'+s.th+'">'+s.tag+'</span></button>';
+          +'<span class="sugg-bright">'+s.bright+'</span>'
+          +'<span class="sugg-hard">'+s.hard+'</span></button>';
       }
       h+='</div>';
     }
   }
   h+='</div>';
   panel.innerHTML=h;
+  // Panel content just changed - on mobile re-fit the circle so the (now-measured)
+  // panel fits without scrolling. Safe: resize()->render() never calls back here.
+  if(window.innerWidth<=620 && typeof resize==='function') resize();
 }
 window.setAssistEmotion=setAssistEmotion; window.assistPick=assistPick;
 window.setAssistMove=setAssistMove; window.setAssistStyle=setAssistStyle;
