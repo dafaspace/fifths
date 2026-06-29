@@ -1424,16 +1424,17 @@ function spliceTag(sp){
 // The FEELING of the move, in emotion-first language (brighter / warmer / darker),
 // not key-distance jargon. Sharp side = brighter, flat side = warmer; a major<->minor
 // flip pulls toward lighter/darker.
+// One consistent axis: musical brightness (sharp side brighter, flat side darker;
+// major brighter than minor). Symmetric brighter <-> darker, no mixed metaphors.
 function moveMood(cs,cm,ts,tm){
-  var f=((ts-cs+6)%12)-6;                 // signed fifths: + sharp side, - flat side
-  var bcur=(cm?-1.6:1.6);                  // major is bright, minor is dark
-  var btar=(tm?-1.6:1.6)+f;                // target brightness incl. its position
-  var d=btar-bcur;                         // continuous brightness delta
-  if(d>=2.5)  return 'much brighter';
+  var f=((ts-cs+6)%12)-6;        // signed fifths: + sharp/bright, - flat/dark
+  var bcur=(cm?-1:1), btar=(tm?-1:1)+f;
+  var d=btar-bcur;               // brightness delta
+  if(d>=3)    return 'much brighter';
   if(d>=0.8)  return 'brighter';
-  if(d>-0.8)  return 'similar mood';
-  if(d>-2.5)  return 'warmer';
-  return 'darker';
+  if(d>-0.8)  return 'similar';
+  if(d>-3)    return 'darker';
+  return 'much darker';
 }
 // Technical detail kept for the hover tooltip (pitch shift + modal colour).
 function moveTip(cs,cm,ts,tm,modeLabel){
