@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Another Circle Of Fifths</title>
-<meta name="description" content="Interactive circle of fifths — keys, modes, chords, Camelot & solfège. A music theory tool.">
+<meta name="description" content="Interactive circle of fifths - keys, modes, chords, Camelot & solfège. A music theory tool.">
 <meta name="theme-color" content="#1c1c1a">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.png">
@@ -25,7 +25,15 @@
   --text: #1a1a18; --text2: #5a5a56; --text3: #9a9a94;
   --bd: rgba(0,0,0,0.09); --bd2: rgba(0,0,0,0.16);
 }
-body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; overflow-x: hidden; }
+/* Two-column (desktop/tablet): lock to viewport height so the page never scrolls;
+   the circle is fitted to the available height and the detail panel scrolls itself. */
+@media (min-width: 621px) {
+  body { height: 100dvh; min-height: 0; overflow: hidden; display: flex; flex-direction: column;
+         max-width: 860px; margin-left: auto; margin-right: auto; }
+  .layout { flex: 1; min-height: 0; align-items: stretch; }
+  .panel { max-height: 100%; }
+}
 h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 
 /* Top bar */
@@ -33,6 +41,55 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 .mode-switcher { display:flex; gap:2px; margin-bottom:10px; background:var(--bg2); border-radius:20px; padding:2px; width:fit-content; }
 .ms-btn { padding:4px 14px; font-size:12px; border-radius:18px; border:none; background:none; color:var(--text3); cursor:pointer; font-family:var(--font); transition:all .15s; }
 .ms-btn.active { background:var(--text); color:var(--bg); font-weight:500; }
+
+/* Toggle switch (replaces "minor" checkbox) */
+.tog { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--text3); cursor:pointer; user-select:none; }
+.tog input { position:absolute; opacity:0; width:0; height:0; }
+.tog .track { position:relative; width:30px; height:17px; border-radius:999px; background:var(--bd2); transition:background .18s; flex-shrink:0; }
+.tog .track::before { content:""; position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.35); transition:transform .18s; }
+.tog input:checked + .track { background:var(--text); }
+.tog input:checked + .track::before { transform:translateX(13px); }
+.tog input:focus-visible + .track { outline:2px solid var(--text2); outline-offset:2px; }
+
+/* Segmented control (replaces camelot/solfège checkboxes - they're mutually exclusive) */
+.seg { display:inline-flex; gap:2px; background:var(--bg2); border-radius:14px; padding:2px; }
+.seg-btn { padding:3px 11px; font-size:11px; border-radius:12px; border:none; background:none; color:var(--text3); cursor:pointer; font-family:var(--font); transition:all .15s; white-space:nowrap; }
+.seg-btn.active { background:var(--text); color:var(--bg); font-weight:500; }
+.seg-btn:hover:not(.active) { color:var(--text2); }
+
+/* App bar (header) + utility cluster */
+.appbar { display:flex; align-items:center; gap:7px; margin-bottom:10px; }
+.appbar h1 { font-size:15px; font-weight:500; color:var(--text2); white-space:nowrap; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.t-btn { background:none; border:1px solid var(--bd2); border-radius:50%; cursor:pointer; width:20px; height:20px; font-size:11px; line-height:1; color:var(--text2); padding:0; flex-shrink:0; }
+.t-btn:hover { background:var(--bg2); }
+.util { display:inline-flex; align-items:center; gap:1px; flex-shrink:0; }
+.util-btn { background:none; border:none; cursor:pointer; padding:4px 6px; line-height:1; color:var(--text2); font-size:15px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; }
+.util-btn:hover { background:var(--bg2); }
+.util-btn.active { color:var(--text); background:var(--bg3); }
+#bm-quiz { color:#9b7fd4; }
+#bm-quiz.active { background:#7B5EA7; color:#fff; }
+
+/* Settings popover */
+.settings-pop { position:absolute; right:16px; z-index:30; background:var(--bg2); border:0.5px solid var(--bd2); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:13px; box-shadow:0 8px 24px rgba(0,0,0,.4); min-width:215px; }
+.set-row { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.set-label { font-size:12px; color:var(--text2); }
+
+/* Context bar - per-mode controls, reserved height so the circle doesn't jump */
+.ctxbar { min-height:34px; margin-bottom:10px; }
+.rel-tools { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+
+/* Transition Assistant */
+.assist-tiles { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px; }
+.etile { font-size:10px; padding:4px 8px; border-radius:14px; border:0.5px solid var(--bd2); border-left:3px solid hsl(var(--eh) 60% 52%); background:var(--bg); color:var(--text2); cursor:pointer; font-family:var(--font); transition:all .12s; }
+.etile:hover { background:var(--bg2); }
+.etile.active { background:hsl(var(--eh) 60% 50%); color:#fff; border-color:hsl(var(--eh) 60% 50%); font-weight:500; }
+.sugg-list { display:flex; flex-direction:column; gap:4px; }
+.sugg-card { display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:7px; width:100%; text-align:left; padding:7px 9px; border-radius:8px; border:0.5px solid var(--bd); background:var(--bg2); cursor:pointer; font-family:var(--font); transition:background .12s; }
+.sugg-card:hover { background:var(--bg3); }
+.sugg-key { font-size:13px; font-weight:500; color:var(--text); }
+.sugg-cam { font-size:10px; color:var(--text3); }
+.sugg-tag { font-size:9px; font-weight:600; color:#fff; padding:1px 6px; border-radius:10px; background:hsl(var(--t) 52% 44%); justify-self:start; }
+.sugg-why { grid-column:1 / -1; font-size:10px; color:var(--text3); }
 
 .btn {
   padding: 5px 12px; font-size: 12px; border-radius: 20px;
@@ -52,7 +109,7 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 /* Mode strip */
 .mode-strip-wrap { margin-bottom: 10px; }
 .mode-strip-label { font-size: 10px; color: var(--text3); margin-bottom: 5px; letter-spacing: .05em; }
-.mode-strip { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
+.mode-strip { display: flex; gap: 3px; flex-wrap: wrap; padding-bottom: 2px; }
 .mode-strip::-webkit-scrollbar { height: 3px; }
 .mode-strip::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
 .mbtn {
@@ -77,16 +134,29 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 
 /* Layout */
 .layout { display: grid; grid-template-columns: 1fr 256px; gap: 12px; align-items: start; }
-@media (max-width: 620px) { .layout { grid-template-columns: 1fr; } }
+/* Mobile: lock to viewport and split height between circle and a scrolling panel,
+   so a phone shows everything compactly without page scroll. */
+@media (max-width: 620px) {
+  body { height: 100dvh; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .layout { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+  .layout > div:first-child { flex: 0 0 auto; }
+  .panel { flex: 1 1 auto; min-height: 0; }
+  .dot-legend { margin-top: 5px; }
+}
 canvas { display: block; width: 100%; cursor: pointer; touch-action: none; }
 .dot-legend { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
 .dl { display: flex; align-items: center; font-size: 10px; color: var(--text2); }
 .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; flex-shrink: 0; }
 
 /* Panel */
-.panel { border: 0.5px solid var(--bd); border-radius: 12px; overflow: hidden; background: var(--bg); }
-.phead { padding: 9px 13px; border-bottom: 0.5px solid var(--bd); font-size: 12px; font-weight: 500; color: var(--text2); display: flex; align-items: center; gap: 6px; }
-.pbody { padding: 11px 13px; }
+.panel { border: 0.5px solid var(--bd); border-radius: 12px; overflow: hidden; background: var(--bg); display: flex; flex-direction: column; }
+.phead { padding: 9px 13px; border-bottom: 0.5px solid var(--bd); font-size: 12px; font-weight: 500; color: var(--text2); display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.pbody { padding: 11px 13px; overflow-y: auto; }
+/* Transpose stepper - lives next to the key name (pitch-shift is core to Assist) */
+.kt-step { display:inline-flex; align-items:center; gap:3px; vertical-align:middle; margin-left:10px; }
+.kt-lbl { font-size:10px; color:var(--text3); letter-spacing:.04em; margin-right:1px; }
+.kt-step button { width:20px; height:18px; border-radius:5px; border:0.5px solid var(--bd2); background:var(--bg2); color:var(--text2); font-size:8px; cursor:pointer; font-family:var(--font); line-height:1; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+.kt-step button:hover { background:var(--bg3); color:var(--text); }
 .key-big { font-size: 22px; font-weight: 500; line-height: 1; color: var(--text); }
 .key-sub { font-size: 11px; color: var(--text3); margin: 2px 0 0; }
 .ctx-line { font-size: 11px; color: var(--text2); height: 17px; margin: 4px 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -123,52 +193,72 @@ canvas { display: block; width: 100%; cursor: pointer; touch-action: none; }
 </style>
 </head>
 <body>
-<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-  <h1 style="pointer-events:none;font-size:15px;font-weight:500;color:var(--text2)">Another Circle Of Fifths <span style="font-size:10px;color:var(--text3);font-weight:400">v2.6.1</span></h1>
-  <button onclick="transpose(-1)" title="Transpose ½ step down" style="background:none;border:1px solid var(--bd2);border-radius:50%;cursor:pointer;width:20px;height:20px;font-size:11px;line-height:1;color:var(--text2);padding:0;flex-shrink:0">&#9660;</button>
-  <button onclick="transpose(1)" title="Transpose ½ step up" style="background:none;border:1px solid var(--bd2);border-radius:50%;cursor:pointer;width:20px;height:20px;font-size:11px;line-height:1;color:var(--text2);padding:0;flex-shrink:0">&#9650;</button>
+<div class="appbar">
+  <h1 style="pointer-events:none">Another Circle Of Fifths <span style="font-size:10px;color:var(--text3);font-weight:400">v2.7.0</span></h1>
+  <div style="flex:1"></div>
+  <div class="util">
+    <button class="util-btn" id="bm-quiz" onclick="toggleQuiz()" title="Ear-training quiz" aria-label="Quiz"><svg width="15" height="15" viewBox="0 0 16 16" style="vertical-align:middle"><path d="M8 2.5 1.5 5 8 7.5 14.5 5 8 2.5z" fill="currentColor"/><path d="M4 6.4V9.5c0 1 8 1 8 0V6.4M14 5.2v3.3" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+    <button class="util-btn" id="btn-sound" onclick="toggleSound()" title="Toggle sound" aria-label="Sound"><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle"><polygon points="1,4.5 4,4.5 7,2 7,12 4,9.5 1,9.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.5 5a2.5 2.5 0 0 1 0 4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+    <button class="util-btn" id="btn-theme" onclick="toggleTheme()" title="Toggle light/dark" aria-label="Theme">&#9790;</button>
+    <button class="util-btn" id="btn-share" onclick="shareLink()" title="Copy link to this key" aria-label="Share"><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle"><path d="M5.5 8.5a3 3 0 0 0 4.2 0l1.5-1.5a3 3 0 0 0-4.2-4.2L6 3.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8.5 5.5a3 3 0 0 0-4.2 0L2.8 7a3 3 0 0 0 4.2 4.2L8 10.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+    <button class="util-btn" id="btn-settings" onclick="toggleSettings()" title="Settings" aria-label="Settings">&#9881;</button>
+  </div>
 </div>
+
+<div id="settings-pop" class="settings-pop" style="display:none">
+  <div class="set-row">
+    <span class="set-label">Notation</span>
+    <div class="seg" id="notation-seg" role="group" aria-label="Notation">
+      <button type="button" class="seg-btn active" id="seg-notes"   onclick="setNotation('notes')"   title="Standard note names">Notes</button>
+      <button type="button" class="seg-btn"        id="seg-camelot" onclick="setNotation('camelot')" title="Camelot DJ notation">Camelot</button>
+      <button type="button" class="seg-btn"        id="seg-solfege" onclick="setNotation('solfege')" title="Solfège (Do Re Mi)">Solfège</button>
+    </div>
+  </div>
+  <div class="set-row">
+    <span class="set-label">Minor ring <span style="color:var(--text3);font-size:10px">· Tonal</span></span>
+    <label class="tog" title="Show the minor (inner) ring">
+      <input type="checkbox" id="cb-minor" onchange="onToggleMinor()" checked><span class="track"></span>
+    </label>
+  </div>
+  <div class="set-row">
+    <span class="set-label">Assist style <span style="color:var(--text3);font-size:10px">· Assist</span></span>
+    <div class="seg" id="assist-style-seg" role="group" aria-label="Assist style">
+      <button type="button" class="seg-btn active" id="seg-feelings" onclick="setAssistStyle('feelings')" title="Emotion tiles - for video / non-musicians">Feelings</button>
+      <button type="button" class="seg-btn"        id="seg-moves"    onclick="setAssistStyle('moves')"    title="Camelot mixing moves - for DJs">DJ moves</button>
+    </div>
+  </div>
+</div>
+<input type="checkbox" id="cb-camelot" style="display:none">
+<input type="checkbox" id="cb-sol" style="display:none">
 
 <div class="mode-switcher">
   <button class="ms-btn active" id="ms-tonal" onclick="setAppMode('tonal')">Tonal</button>
   <button class="ms-btn" id="ms-modal" onclick="setAppMode('modal')">Modal</button>
+  <button class="ms-btn" id="ms-assist" onclick="setAppMode('assist')">Assist</button>
 </div>
-<div class="topbar">
-  <button class="btn active" id="brel-neighbours"  onclick="setRel('neighbours')">Neighbours</button>
-  <button class="btn"        id="brel-minmed"      onclick="setRel('minmed')">Minor mediant</button>
-  <button class="btn"        id="brel-majmed"      onclick="setRel('majmed')">Major mediant</button>
-  <button class="btn"        id="brel-tritone"     onclick="setRel('tritone')">Tritone</button>
-  <button class="btn"        id="brel-dim7"        onclick="setRel('dim7')">Dim7</button>
-  <button class="btn"        id="brel-neapolitan"  onclick="setRel('neapolitan')">Neapolitan</button>
-  <div class="nrl-group">
-    <button class="btn-nrl"  id="brel-nrlP"        onclick="setRel('nrlP')">P</button>
-    <button class="btn-nrl"  id="brel-nrlR"        onclick="setRel('nrlR')">R</button>
-    <button class="btn-nrl"  id="brel-nrlL"        onclick="setRel('nrlL')">L</button>
+
+<div class="ctxbar" id="ctxbar">
+  <div class="rel-tools" id="rel-tools" style="display:none">
+    <button class="btn active" id="brel-neighbours"  onclick="setRel('neighbours')">Neighbours</button>
+    <button class="btn"        id="brel-minmed"      onclick="setRel('minmed')">Minor mediant</button>
+    <button class="btn"        id="brel-majmed"      onclick="setRel('majmed')">Major mediant</button>
+    <button class="btn"        id="brel-tritone"     onclick="setRel('tritone')">Tritone</button>
+    <button class="btn"        id="brel-dim7"        onclick="setRel('dim7')">Dim7</button>
+    <button class="btn"        id="brel-neapolitan"  onclick="setRel('neapolitan')">Neapolitan</button>
+    <div class="nrl-group">
+      <button class="btn-nrl"  id="brel-nrlP"        onclick="setRel('nrlP')">P</button>
+      <button class="btn-nrl"  id="brel-nrlR"        onclick="setRel('nrlR')">R</button>
+      <button class="btn-nrl"  id="brel-nrlL"        onclick="setRel('nrlL')">L</button>
+    </div>
   </div>
-  <div class="sep"></div>
-  <button class="btn btn-quiz" id="bm-quiz" onclick="toggleQuiz()">Quiz</button>
-  <label id="minor-label" style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer">
-    <input type="checkbox" id="cb-minor" onchange="render()" checked> minor
-  </label>
-  <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer" title="Camelot DJ notation">
-    <input type="checkbox" id="cb-camelot" onchange="onToggleCam()"> camelot
-  </label>
-  <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer" title="Solfège notation (Do Re Mi)">
-    <input type="checkbox" id="cb-sol" onchange="onToggleSol()"> solfège
-  </label>
-  <button id="btn-sound" onclick="toggleSound()" title="Toggle sound" style="background:none;border:none;cursor:pointer;padding:2px 6px;line-height:1;color:var(--text2)"><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle"><polygon points="1,4.5 4,4.5 7,2 7,12 4,9.5 1,9.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.5 5a2.5 2.5 0 0 1 0 4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
-  <button onclick="shareLink()" title="Copy link to this key" style="background:none;border:none;cursor:pointer;padding:2px 6px;line-height:1;color:var(--text2)" id="btn-share"><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle"><path d="M5.5 8.5a3 3 0 0 0 4.2 0l1.5-1.5a3 3 0 0 0-4.2-4.2L6 3.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8.5 5.5a3 3 0 0 0-4.2 0L2.8 7a3 3 0 0 0 4.2 4.2L8 10.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
-  <button id="btn-theme" onclick="toggleTheme()" title="Toggle light/dark" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px 6px;line-height:1;color:var(--text3)">&#9790;</button>
-
-</div>
-
-<div class="mode-strip-wrap" style="display:none">
-  <div class="mode-strip" id="modestrip"></div>
 </div>
 
 <div class="layout">
   <div>
     <canvas id="c"></canvas>
+    <div class="mode-strip-wrap" style="display:none;margin-top:10px;margin-bottom:0">
+      <div class="mode-strip" id="modestrip"></div>
+    </div>
     <div class="dot-legend" id="legend"></div>
   </div>
   <div class="panel" id="panel">
@@ -228,14 +318,14 @@ var RELS = {
   dim7:        { label:'Dim7',          desc:'Diminished 7th pivot',                      get: function(i){ return [(i+3)%12,(i+6)%12,(i+9)%12]; } },
   neapolitan:  { label:'Neapolitan',    desc:'\u266dII semitone above root',              get: function(i){ return [(i+7)%12]; } },
   // Neo-Riemannian: operate on the TONAL SLICE, show target slice
-  // P: parallel — same slice (visual no-op on circle, shown in panel)
-  // P: Parallel — same root, major↔minor → same sector on circle
-  nrlP: { label:'Neo-R P', desc:'Parallel — same root, major ↔ minor',
+  // P: parallel - same slice (visual no-op on circle, shown in panel)
+  // P: Parallel - same root, major↔minor → same sector on circle
+  nrlP: { label:'Neo-R P', desc:'Parallel - same root, major ↔ minor',
     getTarget: function(slice, fromInner, actualSlice) {
       return fromInner ? { sector: actualSlice, inner: false }
                        : { sector: (slice+9)%12, inner: true };
     }},
-  nrlR: { label:'Neo-R R', desc:'Relative — same key signature',
+  nrlR: { label:'Neo-R R', desc:'Relative - same key signature',
     getTarget: function(slice, fromInner, actualSlice) {
       return { sector: slice, inner: !fromInner };
     }},
@@ -250,16 +340,41 @@ var ALL_REL_KEYS = ['neighbours','minmed','majmed','tritone','dim7','neapolitan'
 // Camelot (standard Mixed-In-Key wheel): C=8B, G=9B, D=10B, A=11B, E=12B, B=1B,
 // F#=2B, Db=3B, Ab=4B, Eb=5B, Bb=6B, F=7B. Indexed by slice (C=0,G=1,D=2...F=11).
 var CAM_MAJ = [8,9,10,11,12,1,2,3,4,5,6,7];
-function onToggleCam() {
-  if (document.getElementById('cb-camelot').checked)
-    document.getElementById('cb-sol').checked = false;
+// Notation is a single mutually-exclusive choice driven by the segmented control.
+// The hidden cb-camelot / cb-sol checkboxes remain the state source so isCamelot()/
+// isSol() and the share-link loader keep working unchanged.
+function setNotation(mode) {
+  document.getElementById('cb-camelot').checked = (mode === 'camelot');
+  document.getElementById('cb-sol').checked     = (mode === 'solfege');
+  updateNotationSeg();
+  savePref('notation', mode);
   render(); updatePanel();
 }
-function onToggleSol() {
-  if (document.getElementById('cb-sol').checked)
-    document.getElementById('cb-camelot').checked = false;
-  render(); updatePanel();
+function updateNotationSeg() {
+  var mode = isCamelot() ? 'camelot' : isSol() ? 'solfege' : 'notes';
+  ['notes','camelot','solfege'].forEach(function(m) {
+    var b = document.getElementById('seg-' + m);
+    if (b) b.classList.toggle('active', m === mode);
+  });
 }
+window.setNotation = setNotation;
+
+// Sticky preferences - each persona keeps its own tailored interface across visits.
+function savePref(k, v) { try { localStorage.setItem('cof_' + k, JSON.stringify(v)); } catch(e){} }
+function loadPref(k, d)  { try { var v = localStorage.getItem('cof_' + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+function onToggleMinor() { savePref('minor', document.getElementById('cb-minor').checked); render(); }
+window.onToggleMinor = onToggleMinor;
+function toggleSettings() {
+  var p = document.getElementById('settings-pop');
+  p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+}
+window.toggleSettings = toggleSettings;
+document.addEventListener('click', function(e) {
+  var p = document.getElementById('settings-pop');
+  if (!p || p.style.display === 'none') return;
+  if (!p.contains(e.target) && e.target.id !== 'btn-settings' && !e.target.closest('#btn-settings'))
+    p.style.display = 'none';
+});
 // Solfège (Fixed-do): semitone 0-11
 var SOL_NAMES = ['Do','Di','Re','Me','Mi','Fa','Fi','Sol','Le','La','Te','Si'];
 function isSol() { var el=document.getElementById('cb-sol'); return el&&el.checked; }
@@ -271,6 +386,7 @@ function camelot(slice, isMinor) {
 function isCamelot() { var el=document.getElementById('cb-camelot'); return el&&el.checked; }
 function toggleTheme() {
   document.documentElement.classList.toggle('light');
+  savePref('light', document.documentElement.classList.contains('light'));
   _updateThemeBtn();
 }
 function _updateThemeBtn() {
@@ -304,6 +420,24 @@ var W=0, H=0, CX=0, CY=0, R=0;
 function resize() {
   var dpr = devicePixelRatio || 1;
   var s   = Math.min(cv.parentElement.clientWidth, 500);
+  // On the two-column layout, also fit the circle to the available height so the
+  // page never needs to scroll. Canvas top is fixed by the elements above it;
+  // subtract whatever sits below the canvas (mode strip + legend) from the space.
+  if (window.innerWidth > 620) {
+    var top = cv.getBoundingClientRect().top;
+    var below = 0, sib = cv.nextElementSibling;
+    while (sib) { if (sib.offsetParent !== null) below += sib.getBoundingClientRect().height; sib = sib.nextElementSibling; }
+    var availH = window.innerHeight - top - below - 24;
+    if (availH > 160) s = Math.min(s, availH);
+  } else {
+    // Mobile: give the circle about half the space under the header so the panel
+    // below it still fits without the page scrolling.
+    var lay = cv.closest('.layout');
+    if (lay) {
+      var avail = window.innerHeight - lay.getBoundingClientRect().top - 12;
+      s = Math.min(s, Math.max(210, avail * 0.5));
+    }
+  }
   cv.style.width  = s + 'px';
   cv.style.height = s + 'px';
   cv.width  = s * dpr;
@@ -345,7 +479,7 @@ function getParentSlice(slice, modeIdx) {
 function render() {
   ctx.clearRect(0, 0, W, H);
   var dark      = isDark();
-  var showMinor = appMode === 'tonal' && document.getElementById('cb-minor').checked;
+  var showMinor = appMode === 'assist' || (appMode === 'tonal' && document.getElementById('cb-minor').checked);
   var slA       = 2 * Math.PI / 12;
   var outerR    = R;
   var innerR    = R * (showMinor ? 0.62 : 0.74);
@@ -357,8 +491,9 @@ function render() {
   var prlTargetInner = false;
   var scaleHL = {};
   // tonic = the actual tonal centre (parent for non-Ionian modes)
-  if (selected) {
-    // Tonal centre is always selected.slice — use it for scale and relation highlights
+  // Assist is a decision tool, not analysis - no relation highlights there.
+  if (selected && appMode !== 'assist') {
+    // Tonal centre is always selected.slice - use it for scale and relation highlights
     var _gt = RELS[activeRel].getTarget;
     if (_gt) {
       var _fi = !!selected.fromInner;
@@ -388,7 +523,7 @@ function render() {
     var hovInner = hovered && hovered.slice === i && hovered.isInner;
     var faded    = selected && !isSel && !inScale && !inRel;
 
-    // Outer ring — annular (donut), keeps minor area visually clean
+    // Outer ring - annular (donut), keeps minor area visually clean
     var selIsInner  = isSel && !!selected.fromInner;
     var isPRLTarget = inRel && RELS[activeRel].getTarget;
     var outerIsPRL  = isPRLTarget && !prlTargetInner;
@@ -411,7 +546,7 @@ function render() {
     ctx.strokeStyle = dark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)';
     ctx.lineWidth = 1.2; ctx.stroke();
 
-    // Inner ring — annular (midR*0.93 to innerR), leaves acc ring transparent
+    // Inner ring - annular (midR*0.93 to innerR), leaves acc ring transparent
     if (showMinor) {
       ctx.beginPath();
       ctx.moveTo(CX + Math.cos(a0)*innerR, CY + Math.sin(a0)*innerR);
@@ -430,7 +565,7 @@ function render() {
       ctx.lineWidth = 0.8; ctx.stroke();
     }
 
-    // Accidentals ring — outer arc boundary
+    // Accidentals ring - outer arc boundary
     ctx.beginPath(); ctx.arc(CX,CY,midR*0.93,a0,a1);
     ctx.strokeStyle = dark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.07)';
     ctx.lineWidth = 0.6; ctx.stroke();
@@ -526,7 +661,7 @@ function render() {
     }
   }
 
-  // Center circle — no fill, just border
+  // Center circle - no fill, just border
   ctx.beginPath(); ctx.arc(CX,CY,R*0.17,0,Math.PI*2);
   ctx.strokeStyle= dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
   ctx.lineWidth  = 0.5; ctx.stroke();
@@ -545,12 +680,16 @@ function buildLegend() {
 // ── Input ─────────────────────────────────────────────────────────────────────
 function getSlice(x, y) {
   var dx=x-CX, dy=y-CY, dist=Math.sqrt(dx*dx+dy*dy);
-  var showMinor = appMode === 'tonal' && document.getElementById('cb-minor').checked;
+  var showMinor = appMode === 'assist' || (appMode === 'tonal' && document.getElementById('cb-minor').checked);
   var innerR = R*(showMinor ? 0.62 : 0.74);
-  if (dist > R || dist < R*0.38*0.93) return null;
-  var a = Math.atan2(dy,dx)+Math.PI/2;
-  if (a<0) a+=2*Math.PI;
-  var slice = Math.floor(a/(2*Math.PI/12))%12;
+  if (dist > R * 1.04 || dist < R*0.38*0.93) return null;
+  // Sectors are drawn CENTERED on -PI/2 + i*slA (where the label sits), so the
+  // hit-test must be shifted half a sector to match - otherwise the label lands
+  // on the boundary and the left half of each label triggers the previous sector.
+  var slA = 2*Math.PI/12;
+  var a = Math.atan2(dy,dx) + Math.PI/2 + slA/2;
+  a = ((a % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+  var slice = Math.floor(a/slA)%12;
   var isInner = showMinor && dist < innerR;
   return { slice:slice, isInner:isInner };
 }
@@ -574,14 +713,14 @@ function handlePick(h) {
   } else if (h.isInner) {
     newModeIdx = 4; // Tonal: Aeolian for inner ring
   } else {
-    // Tonal: outer ring — keep mode only if major-type
+    // Tonal: outer ring - keep mode only if major-type
     newModeIdx = (MODES[lastModeIdx].type === 'maj') ? lastModeIdx : 0;
   }
-  // slice = sector (tonal centre) — never remap for inner ring
+  // slice = sector (tonal centre) - never remap for inner ring
   if (selected && selected.slice === h.slice && selected.modeIdx === newModeIdx) {
     selected = null;
   } else {
-    selected = { slice: h.slice, tonicSlice: h.slice, modeIdx: newModeIdx, fromInner: appMode === 'tonal' ? h.isInner : false };
+    selected = { slice: h.slice, tonicSlice: h.slice, modeIdx: newModeIdx, fromInner: (appMode === 'tonal' || appMode === 'assist') ? h.isInner : false };
     lastModeIdx = newModeIdx;
     buildModeStrip();
   }
@@ -598,10 +737,25 @@ cv.addEventListener('mouseleave', function() { hovered=null; render(); });
 cv.addEventListener('click', function(e) {
   var c=evCoords(e); handlePick(getSlice(c.x,c.y));
 });
-cv.addEventListener('touchstart', function(e){ e.preventDefault(); }, {passive:false});
+var _touchDown = null;
+cv.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  var c = evCoords(e);
+  _touchDown = c;
+  hovered = getSlice(c.x, c.y);
+  render(); // immediate visual feedback on touchdown
+}, {passive:false});
+cv.addEventListener('touchmove', function(e) { e.preventDefault(); }, {passive:false});
 cv.addEventListener('touchend', function(e) {
   e.preventDefault();
-  var c=evCoords(e); handlePick(getSlice(c.x,c.y));
+  if (_touchDown) {
+    hovered = null;
+    handlePick(getSlice(_touchDown.x, _touchDown.y));
+    _touchDown = null;
+  }
+});
+cv.addEventListener('touchcancel', function() {
+  _touchDown = null; hovered = null; render();
 });
 
 // ── Mode strip ────────────────────────────────────────────────────────────────
@@ -643,7 +797,7 @@ function buildModeStrip() {
 
   var html = '';
   if (appMode === 'modal') {
-    // Modal: parallel modes — same tonic note, all 7 modes
+    // Modal: parallel modes - same tonic note, all 7 modes
     var tonicName = MAJSHORT[selected.slice];
     for (var m=0; m<7; m++) {
       var mode = MODES[m];
@@ -656,7 +810,7 @@ function buildModeStrip() {
         + '</button>';
     }
   } else {
-    // Tonal: relative modes — 7 different notes of parent major
+    // Tonal: relative modes - 7 different notes of parent major
     var tSlice = selected.tonicSlice !== undefined ? selected.tonicSlice : selected.slice;
     var modeData = getModeDataForSlice(tSlice, 0);
     for (var m=0; m<7; m++) {
@@ -741,6 +895,7 @@ function getSecondaryDominants(slice, tSlice) {
 
 function updatePanel() {
   var panel = document.getElementById('panel');
+  if (appMode === 'assist') { renderAssistPanel(); return; }
   if (!selected) {
     panel.innerHTML = '<div class="phead">Info</div><div class="pbody"><div class="empty">Click a key on the circle</div></div>';
     return;
@@ -791,7 +946,7 @@ function updatePanel() {
   // Scale HTML
   var scaleHTML = '';
   for (var i=0; i<notes.length; i++) {
-    var _nSemi = MROOT[actualSlice] + MODES[modeIdx].iv[i]; // no %12 — _playNote handles octave
+    var _nSemi = MROOT[actualSlice] + MODES[modeIdx].iv[i]; // no %12 - _playNote handles octave
     scaleHTML += '<div class="sn'+(i===0?' root':'')
       +'" onclick="playNotePill('+_nSemi+')" style="cursor:pointer'
       +(i===0?';background:'+col:'')+'">'+notes[i]+'</div>';
@@ -839,7 +994,7 @@ function updatePanel() {
     panel.innerHTML =
     '<div class="phead"><span class="sw" style="background:'+col+'"></span>'+keyName+camLabel+'</div>' +
     '<div class="pbody">' +
-      '<div class="key-big">'+keyName+'</div>' +
+      '<div class="key-big">'+keyName+tStepHTML()+'</div>' +
       (isCamelot() ? '<div style="font-size:12px;color:var(--text3);margin:-2px 0 4px">Camelot <strong style="color:var(--text2)">'+CAM_MAJ[accSlice]+(MODES[modeIdx].type==='maj'?'B':'A')+'</strong></div>' : '') +
       (!isCamelot() ? '<div class="key-sub">'+(acc?acc+' \u00b7 ':'')+mode.mood+'</div>' : '<div class="key-sub">'+mode.mood+'</div>') +
       '<div class="ctx-line">'+ctxHTML+'</div>' +
@@ -931,12 +1086,12 @@ var QUIZ = [
     return { q:'What is the parallel major of '+qName(MINNAMES[i])+'?', correct:i,
       opts:shuffled4(i, function(j){ return qName(MAJSHORT[j])+' major'; }) };
   },
-  // Relative minor — same sector (same key signature)
+  // Relative minor - same sector (same key signature)
   function(i) {
     return { q:'Relative minor of '+qName(MAJSHORT[i])+' major?', correct:i,
       opts:shuffled4(i, function(j){ return qName(MINNAMES[j]); }) };
   },
-  // Relative major — same sector (same key signature)
+  // Relative major - same sector (same key signature)
   function(i) {
     return { q:'Relative major of '+qName(MINNAMES[i])+'?', correct:i,
       opts:shuffled4(i, function(j){ return qName(MAJSHORT[j])+' major'; }) };
@@ -1139,7 +1294,7 @@ function playChordPill(semi, type) {
   _playArp(_triad(semi, type), 4);
 }
 
-// Play mode scale ascending — highlights characteristic note of each mode
+// Play mode scale ascending - highlights characteristic note of each mode
 function playModeScale(slice, modeIdx, fromInner) {
   if (!_soundOn) return;
   var mode = MODES[modeIdx];
@@ -1179,9 +1334,11 @@ function setAppMode(mode) {
   // Update switcher buttons
   document.getElementById('ms-tonal').classList.toggle('active', mode === 'tonal');
   document.getElementById('ms-modal').classList.toggle('active', mode === 'modal');
-  // Show/hide minor checkbox (only in tonal mode)
-  var minorLabel = document.getElementById('minor-label');
-  if (minorLabel) minorLabel.style.display = mode === 'tonal' ? '' : 'none';
+  var _msA = document.getElementById('ms-assist'); if (_msA) _msA.classList.toggle('active', mode === 'assist');
+  // Advanced relations live only in Modal (tier 3 - composer). Tonal keeps the
+  // Neighbours highlight under the hood; Assist suppresses relation highlights.
+  var relTools = document.getElementById('rel-tools');
+  if (relTools) relTools.style.display = mode === 'modal' ? '' : 'none';
   // Show/hide mode strip (only in modal mode)
   var stripWrap = document.querySelector('.mode-strip-wrap');
   if (stripWrap) stripWrap.style.display = mode === 'modal' ? '' : 'none';
@@ -1191,9 +1348,197 @@ function setAppMode(mode) {
   buildModeStrip();
   render();
   updatePanel();
+  // Mode strip appears/disappears below the canvas - refit the circle to height.
+  if (typeof resize === 'function') resize();
 }
 
+// ── Transition Assistant (Assist mode) ──────────────────────────────────────────
+// Two interchangeable styles (sticky pref `assist_style`):
+//   'feelings' - emotion language for non-musicians/video. Each emotion is a point
+//                on valence×arousal: quality (maj/min) = valence, characteristic
+//                MODE = colour, arousal (ar 0..1) = how far the move may travel.
+//                So two minor emotions (e.g. Sad vs Action) now yield DIFFERENT
+//                ranked lists + different modal colour, not the same maj/min dump.
+//   'moves'    - Camelot mixing moves for DJs (lift/drop energy, switch mood…).
+// KEY still carries the smooth splice; emotion/mode carries the feel.
+// mode = index into MODES (Ionian0 Lydian1 Mixo2 Dorian3 Aeolian4 Phrygian5 Locrian6)
+var EMOTIONS = [
+  {name:'Action',    hue:0,  quality:'min', mode:5, ar:0.95},
+  {name:'Tension',   hue:12, quality:'min', mode:6, ar:0.9 },
+  {name:'Suspense',  hue:265,quality:'min', mode:5, ar:0.7 },
+  {name:'Detective', hue:220,quality:'min', mode:3, ar:0.5 },
+  {name:'Sneaky',    hue:285,quality:'min', mode:3, ar:0.55},
+  {name:'Resentful', hue:330,quality:'min', mode:4, ar:0.6 },
+  {name:'Sad',       hue:210,quality:'min', mode:4, ar:0.2 },
+  {name:'Bittersweet',hue:250,quality:'min',mode:3, ar:0.3 },
+  {name:'Process',   hue:200,quality:'min', mode:4, ar:0.35},
+  {name:'Romantic',  hue:340,quality:'maj', mode:0, ar:0.3 },
+  {name:'Hopeful',   hue:158,quality:'maj', mode:1, ar:0.35},
+  {name:'Quirky',    hue:48, quality:'maj', mode:1, ar:0.6 },
+  {name:'Happy',     hue:45, quality:'maj', mode:0, ar:0.25},
+  {name:'Heroic',    hue:28, quality:'maj', mode:2, ar:0.8 },
+  {name:'Triumph',   hue:36, quality:'maj', mode:0, ar:0.85}
+];
+// DJ mixing moves - each maps current key→target using the Camelot grid. On the
+// circle of fifths a step of +1 slice = up a perfect fifth = +1 Camelot hour.
+// (Minor at the same slice is the RELATIVE minor - that's the 'Switch mood' move.)
+var DJMOVES = [
+  {name:'Lift energy', sub:'+1 step · smooth',  fn:function(cs,cm){ return [{slice:(cs+1)%12, min:cm}]; }},
+  {name:'Drop energy', sub:'−1 step · smooth',  fn:function(cs,cm){ return [{slice:(cs+11)%12,min:cm}]; }},
+  {name:'Switch mood', sub:'major ↔ minor',     fn:function(cs,cm){ return [{slice:cs, min:!cm}]; }},
+  {name:'Bigger lift', sub:'+2 steps · bolder', fn:function(cs,cm){ return [{slice:(cs+2)%12, min:cm}]; }},
+  {name:'Bigger drop', sub:'−2 steps · bolder', fn:function(cs,cm){ return [{slice:(cs+10)%12,min:cm}]; }}
+];
+var assistStyle   = loadPref('assist_style','feelings'); // 'feelings' | 'moves'
+var assistEmotion = null;
+var assistMove    = null;
+
+function smoothScore(cs,cm,ts,tm){
+  var d=Math.min((ts-cs+12)%12,(cs-ts+12)%12); // circle-of-fifths distance 0..6
+  var sameQ=(cm===tm);
+  if(d===0) return sameQ?86:96;   // d0 + different quality = relative key (seamless)
+  if(d===1) return sameQ?84:66;   // dominant / subdominant
+  if(d===2) return sameQ?56:48;
+  if(d===3) return sameQ?42:38;
+  return Math.max(12,34-d*3);
+}
+function smoothWhy(cs,cm,ts,tm){
+  var d=Math.min((ts-cs+12)%12,(cs-ts+12)%12), sameQ=(cm===tm);
+  if(d===0&&!sameQ) return 'relative '+(tm?'minor':'major')+' - same key signature';
+  if(d===1) return (((ts-cs+12)%12)===1?'dominant':'subdominant')+' - one accidental apart';
+  if(d===2) return 'two steps round the circle';
+  if(d===3) return 'distant - clear colour shift';
+  return 'far - bold jump';
+}
+// Map a raw splice score to a {tag,th} pair describing transition smoothness.
+function spliceTag(sp){
+  return {tag: sp>=90?'Seamless':sp>=78?'Smooth':sp>=55?'Easy':sp>=42?'Bold':'Distant',
+          th : sp>=78?150:sp>=55?90:sp>=42?32:0};
+}
+function assistSuggest(cs,cm,emoIdx){
+  var emo = emoIdx===null ? null : EMOTIONS[emoIdx];
+  var wantMin = emo ? (emo.quality==='min') : null;
+  var rows=[];
+  for(var ts=0;ts<12;ts++){
+    var quals = wantMin===null ? [false,true] : [wantMin];
+    for(var qi=0;qi<quals.length;qi++){
+      var tm=quals[qi];
+      if(ts===cs&&tm===cm) continue; // skip the identical key
+      var d=Math.min((ts-cs+12)%12,(cs-ts+12)%12); // 0..6 fifths away
+      var splice=smoothScore(cs,cm,ts,tm);
+      var score=splice;
+      if(emo){
+        // Arousal sets the preferred travel distance: calm hugs neighbours,
+        // intense reaches for bolder jumps. Reward keys near that distance so
+        // each emotion produces its own ordering even at the same quality.
+        var want = emo.ar*4;                 // calm→~0-1 fifths, intense→~3-4
+        var miss = Math.abs(d-want);
+        score = splice*0.55 + (100-miss*22)*0.45;
+      }
+      rows.push({slice:ts,min:tm,score:score,splice:splice});
+    }
+  }
+  rows.sort(function(a,b){return b.score-a.score;});
+  return rows.slice(0,5).map(function(s){
+    var semi=(MROOT[s.slice]-MROOT[cs]+12)%12; if(semi>6) semi-=12;
+    var t=spliceTag(s.splice);
+    return {slice:s.slice,min:s.min,name:(s.min?MINNAMES[s.slice]:MAJSHORT[s.slice]),
+      cam:camelot(s.slice,s.min),tag:t.tag,th:t.th,why:smoothWhy(cs,cm,s.slice,s.min),semi:semi,
+      modeIdx: emo?emo.mode:(s.min?4:0), modeLabel: emo?MODES[emo.mode].name:''};
+  });
+}
+// DJ mixing-move suggestions: run the move's mapping from the current key.
+function djSuggest(cs,cm,moveIdx){
+  var targets=DJMOVES[moveIdx].fn(cs,cm);
+  return targets.map(function(tg){
+    var semi=(MROOT[tg.slice]-MROOT[cs]+12)%12; if(semi>6) semi-=12;
+    var splice=smoothScore(cs,cm,tg.slice,tg.min);
+    var t=spliceTag(splice);
+    return {slice:tg.slice,min:tg.min,name:(tg.min?MINNAMES[tg.slice]:MAJSHORT[tg.slice]),
+      cam:camelot(tg.slice,tg.min),tag:t.tag,th:t.th,why:smoothWhy(cs,cm,tg.slice,tg.min),semi:semi,
+      modeIdx:(tg.min?4:0), modeLabel:''};
+  });
+}
+function setAssistEmotion(i){ assistEmotion=(assistEmotion===i?null:i); renderAssistPanel(); }
+function setAssistMove(i){ assistMove=(assistMove===i?null:i); renderAssistPanel(); }
+function updateAssistStyleSeg(){
+  var f=document.getElementById('seg-feelings'), m=document.getElementById('seg-moves');
+  if(f) f.classList.toggle('active', assistStyle==='feelings');
+  if(m) m.classList.toggle('active', assistStyle==='moves');
+}
+function setAssistStyle(s){
+  assistStyle=s; savePref('assist_style',s);
+  assistEmotion=null; assistMove=null;
+  updateAssistStyleSeg();
+  if(appMode==='assist') renderAssistPanel();
+}
+function assistPick(slice,min,modeIdx){
+  if(modeIdx===undefined||modeIdx===null) modeIdx=min?4:0;
+  selected={slice:slice,tonicSlice:slice,modeIdx:modeIdx,fromInner:!!min};
+  lastModeIdx=selected.modeIdx;
+  render(); renderAssistPanel();
+  playTonic(slice,selected.modeIdx,selected.fromInner);
+}
+function renderAssistPanel(){
+  var panel=document.getElementById('panel');
+  var cs=selected?selected.slice:null, cm=selected?!!selected.fromInner:false;
+  var h='<div class="phead">Transition Assistant</div><div class="pbody">';
+  if(cs===null){
+    h+='<div class="empty">Tap a key on the circle - that’s what’s playing now.</div>';
+  }else{
+    h+='<div class="slabel">Now playing</div><div class="key-big" style="margin-bottom:9px">'
+      +(cm?MINNAMES[cs]:MAJSHORT[cs])
+      +' <span style="font-size:12px;color:var(--text3);font-weight:400">'+camelot(cs,cm)+'</span>'
+      +tStepHTML()+'</div>';
+  }
+  // Intent picker - Feelings (emotion tiles) or DJ mixing moves, per sticky style.
+  if(assistStyle==='moves'){
+    h+='<div class="slabel">Mixing move</div><div class="assist-tiles">';
+    for(var i=0;i<DJMOVES.length;i++){
+      h+='<button class="etile mv'+(assistMove===i?' active':'')+'" style="--eh:205" '
+        +'onclick="setAssistMove('+i+')" title="'+DJMOVES[i].sub+'">'+DJMOVES[i].name+'</button>';
+    }
+    h+='</div>';
+  }else{
+    h+='<div class="slabel">Next feeling</div><div class="assist-tiles">';
+    for(var i=0;i<EMOTIONS.length;i++){
+      h+='<button class="etile'+(assistEmotion===i?' active':'')+'" style="--eh:'+EMOTIONS[i].hue
+        +'" onclick="setAssistEmotion('+i+')">'+EMOTIONS[i].name+'</button>';
+    }
+    h+='</div>';
+  }
+  if(cs!==null){
+    var sg = assistStyle==='moves'
+      ? (assistMove===null ? null : djSuggest(cs,cm,assistMove))
+      : assistSuggest(cs,cm,assistEmotion);
+    if(sg===null){
+      h+='<div class="empty" style="margin-top:11px">Pick a move above to see where to go next.</div>';
+    }else{
+      var lbl = assistStyle==='moves' ? 'Where to go' : 'Smooth next keys';
+      h+='<div class="slabel" style="margin-top:11px">'+lbl+'</div><div class="sugg-list">';
+      for(var j=0;j<sg.length;j++){ var s=sg[j];
+        var pitch=s.semi===0?'':' · pitch '+(s.semi>0?'+':'')+s.semi;
+        var colour=s.modeLabel?' · '+s.modeLabel+' colour':'';
+        h+='<button class="sugg-card" onclick="assistPick('+s.slice+','+(s.min?1:0)+','+s.modeIdx+')">'
+          +'<span class="sugg-key">'+s.name+'</span><span class="sugg-cam">'+s.cam+'</span>'
+          +'<span class="sugg-tag" style="--t:'+s.th+'">'+s.tag+'</span>'
+          +'<span class="sugg-why">'+s.why+pitch+colour+'</span></button>';
+      }
+      h+='</div>';
+    }
+  }
+  h+='</div>';
+  panel.innerHTML=h;
+}
+window.setAssistEmotion=setAssistEmotion; window.assistPick=assistPick;
+window.setAssistMove=setAssistMove; window.setAssistStyle=setAssistStyle;
+
 // ── Transpose & Share ─────────────────────────────────────────────────────────
+function tStepHTML() {
+  return '<span class="kt-step"><span class="kt-lbl">Transpose</span>'
+    + '<button type="button" onclick="transpose(1)" title="Transpose up a half step">▲</button>'
+    + '<button type="button" onclick="transpose(-1)" title="Transpose down a half step">▼</button></span>';
+}
 function transpose(dir) {
   if (!selected) return;
   // Move by semitone: find slice whose MROOT is current+dir
@@ -1241,12 +1586,22 @@ function _flashShare(msg) {
   setTimeout(function(){ btn.innerHTML = orig; btn.style.fontSize = '13px'; }, 1500);
 }
 
+// Apply sticky preferences first (defaults); a share-link URL param overrides below.
+(function() {
+  if (loadPref('light', false)) document.documentElement.classList.add('light');
+  var notation = loadPref('notation', 'notes');
+  if (notation === 'camelot') document.getElementById('cb-camelot').checked = true;
+  else if (notation === 'solfege') document.getElementById('cb-sol').checked = true;
+  var minorPref = loadPref('minor', true);
+  document.getElementById('cb-minor').checked = minorPref;
+})();
+
 // Read URL params on load
 (function() {
   var p = new URLSearchParams(location.search);
   if (p.get('light') === '1') document.documentElement.classList.add('light');
-  if (p.get('cam') === '1') { var _c=document.getElementById('cb-camelot'); if(_c) _c.checked = true; }
-  if (p.get('sol') === '1') { var _s=document.getElementById('cb-sol'); if(_s) _s.checked = true; }
+  if (p.get('cam') === '1') { var _c=document.getElementById('cb-camelot'); if(_c){ _c.checked = true; var _s2=document.getElementById('cb-sol'); if(_s2)_s2.checked=false; } }
+  if (p.get('sol') === '1') { var _s=document.getElementById('cb-sol'); if(_s){ _s.checked = true; var _c2=document.getElementById('cb-camelot'); if(_c2)_c2.checked=false; } }
   if (p.has('key')) {
     var slice = parseInt(p.get('key'));
     var mode  = parseInt(p.get('mode') || '0');
@@ -1257,6 +1612,8 @@ function _flashShare(msg) {
     }
   }
   if (p.get('app') === 'modal') setAppMode('modal');
+  updateNotationSeg();
+  updateAssistStyleSeg();
 })();
 
 window.addEventListener('resize', resize);
@@ -1269,10 +1626,26 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() { setTimeout(initResize, 0); });
 } else { setTimeout(initResize, 0); }
 
-// ── Service worker (PWA) ────────────────────────────────────────────────────────
+// ── Service worker (PWA) + auto-update ──────────────────────────────────────────
+// Makes home-screen installs update themselves: when a new SW takes control we
+// reload once, and we poll for a new version whenever the app regains focus.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js').catch(function(){});
+    var hadController = !!navigator.serviceWorker.controller;
+    var refreshed = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      // Skip the very first install (no prior controller) to avoid a needless reload.
+      if (refreshed || !hadController) return;
+      refreshed = true;
+      window.location.reload();
+    });
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+      function checkForUpdate() { reg.update().catch(function(){}); }
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) checkForUpdate();
+      });
+      window.addEventListener('focus', checkForUpdate);
+    }).catch(function(){});
   });
 }
 </script>
