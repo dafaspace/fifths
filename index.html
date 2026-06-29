@@ -21,10 +21,13 @@
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 :root.light {
-  --bg: #cec9bc; --bg2: #c2bdb0; --bg3: #b6b1a4;
-  --text: #1a1a18; --text2: #5a5a56; --text3: #9a9a94;
-  --bd: rgba(0,0,0,0.09); --bd2: rgba(0,0,0,0.16);
+  /* Two-surface light theme: a warm light-grey page, white elevated panels,
+     pale-grey controls inside them, with strong near-black text. */
+  --bg: #e7e3da; --bg2: #f1eee7; --bg3: #e4e0d6;
+  --text: #1a1917; --text2: #5c5b54; --text3: #8d8b83;
+  --bd: rgba(0,0,0,0.10); --bd2: rgba(0,0,0,0.16);
 }
+:root.light .panel { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; overflow-x: hidden; }
 /* Two-column (desktop/tablet): lock to viewport height so the page never scrolls;
    the circle is fitted to the available height and the detail panel scrolls itself. */
@@ -63,7 +66,7 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 .t-btn { background:none; border:1px solid var(--bd2); border-radius:50%; cursor:pointer; width:20px; height:20px; font-size:11px; line-height:1; color:var(--text2); padding:0; flex-shrink:0; }
 .t-btn:hover { background:var(--bg2); }
 .util { display:inline-flex; align-items:center; gap:1px; flex-shrink:0; }
-.util-btn { background:none; border:none; cursor:pointer; padding:4px 6px; line-height:1; color:var(--text2); font-size:15px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; }
+.util-btn { background:none; border:none; cursor:pointer; width:28px; height:26px; padding:0; line-height:1; color:var(--text2); font-size:15px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
 .util-btn:hover { background:var(--bg2); }
 .util-btn.active { color:var(--text); background:var(--bg3); }
 #bm-quiz { color:#9b7fd4; }
@@ -79,17 +82,21 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 .rel-tools { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
 
 /* Transition Assistant */
+.ta-toggle { margin-left:auto; display:inline-flex; gap:2px; background:var(--bg2); border-radius:11px; padding:2px; }
+.ta-seg { font-size:10px; padding:2px 9px; border-radius:9px; border:none; background:none; color:var(--text3); cursor:pointer; font-family:var(--font); line-height:1.5; }
+.ta-seg.active { background:var(--text); color:var(--bg); font-weight:600; }
 .assist-tiles { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px; }
 .etile { font-size:10px; padding:4px 8px; border-radius:14px; border:0.5px solid var(--bd2); border-left:3px solid hsl(var(--eh) 60% 52%); background:var(--bg); color:var(--text2); cursor:pointer; font-family:var(--font); transition:all .12s; }
 .etile:hover { background:var(--bg2); }
 .etile.active { background:hsl(var(--eh) 60% 50%); color:#fff; border-color:hsl(var(--eh) 60% 50%); font-weight:500; }
 .sugg-list { display:flex; flex-direction:column; gap:4px; }
-.sugg-card { display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:7px; width:100%; text-align:left; padding:7px 9px; border-radius:8px; border:0.5px solid var(--bd); background:var(--bg2); cursor:pointer; font-family:var(--font); transition:background .12s; }
+/* Fixed-height single-row card so switching suggestions never resizes it. */
+.sugg-card { display:grid; grid-template-columns:auto auto 1fr auto; align-items:center; gap:8px; width:100%; height:34px; text-align:left; padding:0 10px; border-radius:8px; border:0.5px solid var(--bd); background:var(--bg2); cursor:pointer; font-family:var(--font); transition:background .12s; }
 .sugg-card:hover { background:var(--bg3); }
 .sugg-key { font-size:13px; font-weight:500; color:var(--text); }
 .sugg-cam { font-size:10px; color:var(--text3); }
-.sugg-tag { font-size:9px; font-weight:600; color:#fff; padding:1px 6px; border-radius:10px; background:hsl(var(--t) 52% 44%); justify-self:start; }
-.sugg-why { grid-column:1 / -1; font-size:10px; color:var(--text3); }
+.sugg-why { font-size:10px; color:var(--text2); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.sugg-tag { font-size:9px; font-weight:600; color:#fff; padding:1px 7px; border-radius:10px; background:hsl(var(--t) 52% 44%); justify-self:end; white-space:nowrap; }
 
 .btn {
   padding: 5px 12px; font-size: 12px; border-radius: 20px;
@@ -219,13 +226,6 @@ canvas { display: block; width: 100%; cursor: pointer; touch-action: none; }
     <label class="tog" title="Show the minor (inner) ring">
       <input type="checkbox" id="cb-minor" onchange="onToggleMinor()" checked><span class="track"></span>
     </label>
-  </div>
-  <div class="set-row">
-    <span class="set-label">Assist style <span style="color:var(--text3);font-size:10px">· Assist</span></span>
-    <div class="seg" id="assist-style-seg" role="group" aria-label="Assist style">
-      <button type="button" class="seg-btn active" id="seg-feelings" onclick="setAssistStyle('feelings')" title="Emotion tiles - for video / non-musicians">Feelings</button>
-      <button type="button" class="seg-btn"        id="seg-moves"    onclick="setAssistStyle('moves')"    title="Camelot mixing moves - for DJs">DJ moves</button>
-    </div>
   </div>
 </div>
 <input type="checkbox" id="cb-camelot" style="display:none">
@@ -392,8 +392,9 @@ function toggleTheme() {
 function _updateThemeBtn() {
   var isLight = document.documentElement.classList.contains('light');
   var btn = document.getElementById('btn-theme');
-  btn.textContent = isLight ? '☽' : '☀';
-  btn.style.color  = isLight ? '#1c1c1a' : '#e8e3d8';
+  // ︎ forces monochrome text rendering (not a colour emoji) for consistency.
+  btn.textContent = isLight ? '☀︎' : '☽︎';
+  btn.style.color  = '';
 }
 window.addEventListener('load', _updateThemeBtn);
 
@@ -536,6 +537,8 @@ function render() {
     var aOuter = (isSel && !selIsInner) ? 0.88
                : outerIsPRL             ? 0.30
                : hovOuter ? 0.38 : inScale ? 0.22 : faded ? 0.06 : 0.18;
+    // Light bg needs more saturated fills or the wheel looks washed out.
+    if (!dark) aOuter = Math.min(1, aOuter * 1.7);
     ctx.fillStyle = ha(col, aOuter);
     ctx.fill();
     ctx.strokeStyle = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.12)';
@@ -559,6 +562,7 @@ function render() {
                  : sameSecR    ? 0.28
                  : innerIsPRL  ? 0.30
                  : faded ? 0.04 : 0.10;
+      if (!dark) aInner = Math.min(1, aInner * 1.7);
       ctx.fillStyle = ha(col, aInner);
       ctx.fill();
       ctx.strokeStyle = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
@@ -626,7 +630,7 @@ function render() {
     ctx.save();
     ctx.translate(CX + Math.cos(midA)*lR, CY + Math.sin(midA)*lR);
     var mainLabel = showCam ? camelot(i, false) : (isSol() ? solName(MROOT[i]) : MAJSHORT[i]);
-    var selFill   = (isSel && !selIsInner) ? '#fff' : dark ? 'rgba(255,255,255,.72)' : 'rgba(0,0,0,.7)';
+    var selFill   = (isSel && !selIsInner) ? '#fff' : dark ? 'rgba(255,255,255,.72)' : 'rgba(0,0,0,.82)';
     ctx.font = (isSel ? '500' : '400') + ' ' + Math.max(12, R*0.072) + 'px ' + ff;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = selFill;
@@ -641,7 +645,7 @@ function render() {
       var minMain = showCam ? camelot(i, true) : (isSol() ? solName(MROOT[i]+9) + 'm' : MINNAMES[i]);
       ctx.font = '400 ' + Math.max(9, R*0.052) + 'px ' + ff;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = selIsInner ? '#fff' : dark ? 'rgba(255,255,255,.48)' : 'rgba(0,0,0,.42)';
+      ctx.fillStyle = selIsInner ? '#fff' : dark ? 'rgba(255,255,255,.48)' : 'rgba(0,0,0,.55)';
       ctx.fillText(minMain, 0, 0);
       ctx.restore();
     }
@@ -1382,12 +1386,14 @@ var EMOTIONS = [
 // DJ mixing moves - each maps current key→target using the Camelot grid. On the
 // circle of fifths a step of +1 slice = up a perfect fifth = +1 Camelot hour.
 // (Minor at the same slice is the RELATIVE minor - that's the 'Switch mood' move.)
+// Colour-coded by direction: lifts green (energy up), drops blue/indigo (down),
+// switch-mood purple (the flip) and placed last.
 var DJMOVES = [
-  {name:'Lift energy', sub:'+1 step · smooth',  fn:function(cs,cm){ return [{slice:(cs+1)%12, min:cm}]; }},
-  {name:'Drop energy', sub:'−1 step · smooth',  fn:function(cs,cm){ return [{slice:(cs+11)%12,min:cm}]; }},
-  {name:'Switch mood', sub:'major ↔ minor',     fn:function(cs,cm){ return [{slice:cs, min:!cm}]; }},
-  {name:'Bigger lift', sub:'+2 steps · bolder', fn:function(cs,cm){ return [{slice:(cs+2)%12, min:cm}]; }},
-  {name:'Bigger drop', sub:'−2 steps · bolder', fn:function(cs,cm){ return [{slice:(cs+10)%12,min:cm}]; }}
+  {name:'Lift energy', hue:150, sub:'+1 step · smooth',  fn:function(cs,cm){ return [{slice:(cs+1)%12, min:cm}]; }},
+  {name:'Drop energy', hue:210, sub:'-1 step · smooth',  fn:function(cs,cm){ return [{slice:(cs+11)%12,min:cm}]; }},
+  {name:'Bigger lift', hue:168, sub:'+2 steps · bolder', fn:function(cs,cm){ return [{slice:(cs+2)%12, min:cm}]; }},
+  {name:'Bigger drop', hue:232, sub:'-2 steps · bolder', fn:function(cs,cm){ return [{slice:(cs+10)%12,min:cm}]; }},
+  {name:'Switch mood', hue:288, sub:'major / minor flip', fn:function(cs,cm){ return [{slice:cs, min:!cm}]; }}
 ];
 var assistStyle   = loadPref('assist_style','feelings'); // 'feelings' | 'moves'
 var assistEmotion = null;
@@ -1410,10 +1416,30 @@ function smoothWhy(cs,cm,ts,tm){
   if(d===3) return 'distant - clear colour shift';
   return 'far - bold jump';
 }
-// Map a raw splice score to a {tag,th} pair describing transition smoothness.
+// How comfortable the cut is, in plain words (not DJ jargon).
 function spliceTag(sp){
-  return {tag: sp>=90?'Seamless':sp>=78?'Smooth':sp>=55?'Easy':sp>=42?'Bold':'Distant',
+  return {tag: sp>=90?'perfect':sp>=78?'smooth':sp>=55?'easy':sp>=42?'bold':'far',
           th : sp>=78?150:sp>=55?90:sp>=42?32:0};
+}
+// The FEELING of the move, in emotion-first language (brighter / warmer / darker),
+// not key-distance jargon. Sharp side = brighter, flat side = warmer; a major<->minor
+// flip pulls toward lighter/darker.
+function moveMood(cs,cm,ts,tm){
+  var f=((ts-cs+6)%12)-6;                 // signed fifths: + sharp side, - flat side
+  var bcur=(cm?-1.6:1.6);                  // major is bright, minor is dark
+  var btar=(tm?-1.6:1.6)+f;                // target brightness incl. its position
+  var d=btar-bcur;                         // continuous brightness delta
+  if(d>=2.5)  return 'much brighter';
+  if(d>=0.8)  return 'brighter';
+  if(d>-0.8)  return 'similar mood';
+  if(d>-2.5)  return 'warmer';
+  return 'darker';
+}
+// Technical detail kept for the hover tooltip (pitch shift + modal colour).
+function moveTip(cs,cm,ts,tm,modeLabel){
+  var semi=(MROOT[ts]-MROOT[cs]+12)%12; if(semi>6) semi-=12;
+  var p = semi===0 ? 'same pitch' : 'pitch '+(semi>0?'+':'')+semi+' semitones';
+  return smoothWhy(cs,cm,ts,tm)+' · '+p+(modeLabel?' · '+modeLabel+' colour':'');
 }
 function assistSuggest(cs,cm,emoIdx){
   var emo = emoIdx===null ? null : EMOTIONS[emoIdx];
@@ -1439,38 +1465,31 @@ function assistSuggest(cs,cm,emoIdx){
     }
   }
   rows.sort(function(a,b){return b.score-a.score;});
-  return rows.slice(0,5).map(function(s){
-    var semi=(MROOT[s.slice]-MROOT[cs]+12)%12; if(semi>6) semi-=12;
-    var t=spliceTag(s.splice);
+  return rows.slice(0,4).map(function(s){
+    var t=spliceTag(s.splice), ml=emo?MODES[emo.mode].name:'';
     return {slice:s.slice,min:s.min,name:(s.min?MINNAMES[s.slice]:MAJSHORT[s.slice]),
-      cam:camelot(s.slice,s.min),tag:t.tag,th:t.th,why:smoothWhy(cs,cm,s.slice,s.min),semi:semi,
-      modeIdx: emo?emo.mode:(s.min?4:0), modeLabel: emo?MODES[emo.mode].name:''};
+      cam:camelot(s.slice,s.min),tag:t.tag,th:t.th,
+      why:moveMood(cs,cm,s.slice,s.min), tip:moveTip(cs,cm,s.slice,s.min,ml),
+      modeIdx: emo?emo.mode:(s.min?4:0), modeLabel: ml};
   });
 }
 // DJ mixing-move suggestions: run the move's mapping from the current key.
 function djSuggest(cs,cm,moveIdx){
   var targets=DJMOVES[moveIdx].fn(cs,cm);
   return targets.map(function(tg){
-    var semi=(MROOT[tg.slice]-MROOT[cs]+12)%12; if(semi>6) semi-=12;
-    var splice=smoothScore(cs,cm,tg.slice,tg.min);
-    var t=spliceTag(splice);
+    var splice=smoothScore(cs,cm,tg.slice,tg.min), t=spliceTag(splice);
     return {slice:tg.slice,min:tg.min,name:(tg.min?MINNAMES[tg.slice]:MAJSHORT[tg.slice]),
-      cam:camelot(tg.slice,tg.min),tag:t.tag,th:t.th,why:smoothWhy(cs,cm,tg.slice,tg.min),semi:semi,
+      cam:camelot(tg.slice,tg.min),tag:t.tag,th:t.th,
+      why:moveMood(cs,cm,tg.slice,tg.min), tip:moveTip(cs,cm,tg.slice,tg.min,''),
       modeIdx:(tg.min?4:0), modeLabel:''};
   });
 }
 function setAssistEmotion(i){ assistEmotion=(assistEmotion===i?null:i); renderAssistPanel(); }
 function setAssistMove(i){ assistMove=(assistMove===i?null:i); renderAssistPanel(); }
-function updateAssistStyleSeg(){
-  var f=document.getElementById('seg-feelings'), m=document.getElementById('seg-moves');
-  if(f) f.classList.toggle('active', assistStyle==='feelings');
-  if(m) m.classList.toggle('active', assistStyle==='moves');
-}
 function setAssistStyle(s){
   assistStyle=s; savePref('assist_style',s);
   assistEmotion=null; assistMove=null;
-  updateAssistStyleSeg();
-  if(appMode==='assist') renderAssistPanel();
+  if(appMode==='assist') renderAssistPanel(); // toggle redrawn with active state
 }
 function assistPick(slice,min,modeIdx){
   if(modeIdx===undefined||modeIdx===null) modeIdx=min?4:0;
@@ -1482,7 +1501,11 @@ function assistPick(slice,min,modeIdx){
 function renderAssistPanel(){
   var panel=document.getElementById('panel');
   var cs=selected?selected.slice:null, cm=selected?!!selected.fromInner:false;
-  var h='<div class="phead">Transition Assistant</div><div class="pbody">';
+  var tog='<div class="ta-toggle">'
+    +'<button class="ta-seg'+(assistStyle==='feelings'?' active':'')+'" onclick="setAssistStyle(\'feelings\')" title="Emotion language - for video / non-musicians">Feelings</button>'
+    +'<button class="ta-seg'+(assistStyle==='moves'?' active':'')+'" onclick="setAssistStyle(\'moves\')" title="Camelot mixing moves - for DJs">DJ</button>'
+    +'</div>';
+  var h='<div class="phead">Transition Assistant'+tog+'</div><div class="pbody">';
   if(cs===null){
     h+='<div class="empty">Tap a key on the circle - that’s what’s playing now.</div>';
   }else{
@@ -1495,7 +1518,7 @@ function renderAssistPanel(){
   if(assistStyle==='moves'){
     h+='<div class="slabel">Mixing move</div><div class="assist-tiles">';
     for(var i=0;i<DJMOVES.length;i++){
-      h+='<button class="etile mv'+(assistMove===i?' active':'')+'" style="--eh:205" '
+      h+='<button class="etile mv'+(assistMove===i?' active':'')+'" style="--eh:'+DJMOVES[i].hue+'" '
         +'onclick="setAssistMove('+i+')" title="'+DJMOVES[i].sub+'">'+DJMOVES[i].name+'</button>';
     }
     h+='</div>';
@@ -1514,15 +1537,13 @@ function renderAssistPanel(){
     if(sg===null){
       h+='<div class="empty" style="margin-top:11px">Pick a move above to see where to go next.</div>';
     }else{
-      var lbl = assistStyle==='moves' ? 'Where to go' : 'Smooth next keys';
+      var lbl = assistStyle==='moves' ? 'Where to go' : 'Next key';
       h+='<div class="slabel" style="margin-top:11px">'+lbl+'</div><div class="sugg-list">';
       for(var j=0;j<sg.length;j++){ var s=sg[j];
-        var pitch=s.semi===0?'':' · pitch '+(s.semi>0?'+':'')+s.semi;
-        var colour=s.modeLabel?' · '+s.modeLabel+' colour':'';
-        h+='<button class="sugg-card" onclick="assistPick('+s.slice+','+(s.min?1:0)+','+s.modeIdx+')">'
+        h+='<button class="sugg-card" title="'+s.tip+'" onclick="assistPick('+s.slice+','+(s.min?1:0)+','+s.modeIdx+')">'
           +'<span class="sugg-key">'+s.name+'</span><span class="sugg-cam">'+s.cam+'</span>'
-          +'<span class="sugg-tag" style="--t:'+s.th+'">'+s.tag+'</span>'
-          +'<span class="sugg-why">'+s.why+pitch+colour+'</span></button>';
+          +'<span class="sugg-why">'+s.why+'</span>'
+          +'<span class="sugg-tag" style="--t:'+s.th+'">'+s.tag+'</span></button>';
       }
       h+='</div>';
     }
@@ -1613,7 +1634,6 @@ function _flashShare(msg) {
   }
   if (p.get('app') === 'modal') setAppMode('modal');
   updateNotationSeg();
-  updateAssistStyleSeg();
 })();
 
 window.addEventListener('resize', resize);
