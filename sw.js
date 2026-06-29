@@ -1,5 +1,5 @@
 // Bump CACHE on every version release so clients fetch fresh files.
-var CACHE = "coc-v2.7.0";
+var CACHE = "coc-v2.7.1";
 var ASSETS = ["./index.html", "./manifest.json", "./icon.png"];
 
 self.addEventListener("install", function(e) {

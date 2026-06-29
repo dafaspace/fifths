@@ -97,6 +97,8 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 .sugg-cam { font-size:10px; color:var(--text3); }
 .sugg-why { font-size:10px; color:var(--text2); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .sugg-tag { font-size:9px; font-weight:600; color:#fff; padding:1px 7px; border-radius:10px; background:hsl(var(--t) 52% 44%); justify-self:end; white-space:nowrap; }
+.recipe-hint { font-size:10px; color:var(--text3); padding:6px 2px 2px; display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+.rh-dot { opacity:0.4; }
 
 .btn {
   padding: 5px 12px; font-size: 12px; border-radius: 20px;
@@ -201,7 +203,7 @@ canvas { display: block; width: 100%; cursor: pointer; touch-action: none; }
 </head>
 <body>
 <div class="appbar">
-  <h1 style="pointer-events:none">Another Circle Of Fifths <span style="font-size:10px;color:var(--text3);font-weight:400">v2.7.0</span></h1>
+  <h1 style="pointer-events:none">Another Circle Of Fifths <span style="font-size:10px;color:var(--text3);font-weight:400">v2.7.1</span></h1>
   <div style="flex:1"></div>
   <div class="util">
     <button class="util-btn" id="bm-quiz" onclick="toggleQuiz()" title="Ear-training quiz" aria-label="Quiz"><svg width="15" height="15" viewBox="0 0 16 16" style="vertical-align:middle"><path d="M8 2.5 1.5 5 8 7.5 14.5 5 8 2.5z" fill="currentColor"/><path d="M4 6.4V9.5c0 1 8 1 8 0V6.4M14 5.2v3.3" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg></button>
@@ -1367,21 +1369,57 @@ function setAppMode(mode) {
 // KEY still carries the smooth splice; emotion/mode carries the feel.
 // mode = index into MODES (Ionian0 Lydian1 Mixo2 Dorian3 Aeolian4 Phrygian5 Locrian6)
 var EMOTIONS = [
-  {name:'Action',    hue:0,  quality:'min', mode:5, ar:0.95},
-  {name:'Tension',   hue:12, quality:'min', mode:6, ar:0.9 },
-  {name:'Suspense',  hue:265,quality:'min', mode:5, ar:0.7 },
-  {name:'Detective', hue:220,quality:'min', mode:3, ar:0.5 },
-  {name:'Sneaky',    hue:285,quality:'min', mode:3, ar:0.55},
-  {name:'Resentful', hue:330,quality:'min', mode:4, ar:0.6 },
-  {name:'Sad',       hue:210,quality:'min', mode:4, ar:0.2 },
-  {name:'Bittersweet',hue:250,quality:'min',mode:3, ar:0.3 },
-  {name:'Process',   hue:200,quality:'min', mode:4, ar:0.35},
-  {name:'Romantic',  hue:340,quality:'maj', mode:0, ar:0.3 },
-  {name:'Hopeful',   hue:158,quality:'maj', mode:1, ar:0.35},
-  {name:'Quirky',    hue:48, quality:'maj', mode:1, ar:0.6 },
-  {name:'Happy',     hue:45, quality:'maj', mode:0, ar:0.25},
-  {name:'Heroic',    hue:28, quality:'maj', mode:2, ar:0.8 },
-  {name:'Triumph',   hue:36, quality:'maj', mode:0, ar:0.85}
+  // Dark / negative valence — high to low arousal
+  {name:'Action',    hue:0,   quality:'min', mode:5, ar:0.95, vl:-1,
+   roman:'i - ♭II - ♭VII',          device:'fast ostinato, irregular meter changes',
+   rhythm:'fast 16ths, 5/8 & 7/8',  bpmLo:140, bpmHi:185, traj:'maximum energy explosion'},
+  {name:'Tension',   hue:12,  quality:'min', mode:6, ar:0.9,  vl:-1,
+   roman:'i° - ♭II',                device:'constant ostinato, cluster sustain',
+   rhythm:'relentless static motor', bpmLo:80,  bpmHi:135, traj:'holds at peak, never releases'},
+  {name:'Suspense',  hue:265, quality:'min', mode:5, ar:0.7,  vl:-1,
+   roman:'i - ♭VI - ♭VII',          device:'pedal point, wide dynamics arc',
+   rhythm:'sparse, no constant motor',bpmLo:65, bpmHi:110, traj:'builds slowly toward dramatic peak'},
+  {name:'Horror',    hue:330, quality:'min', mode:6, ar:0.85, vl:-1,
+   roman:'dim7 - tritone - clusters',device:'atonal clusters, extended techniques, stingers',
+   rhythm:'no stable pulse, sudden shocks', bpmLo:40, bpmHi:100, traj:'sudden terror, unpredictable'},
+  {name:'Detective', hue:220, quality:'min', mode:3, ar:0.5,  vl:0,
+   roman:'im7 - ♭II7 - v7',         device:'walking bass, brushes, muted brass',
+   rhythm:'steady swing or latin groove', bpmLo:60, bpmHi:130, traj:'active search - dramatic reveal'},
+  {name:'Sneaky',    hue:285, quality:'min', mode:3, ar:0.55, vl:-1,
+   roman:'i - ♭VII - ♭VI',          device:'pizzicato strings, staccato hits',
+   rhythm:'tiptoeing staccato, sparse', bpmLo:70, bpmHi:110, traj:'cautious stealth, no climax'},
+  {name:'Mysterious',hue:195, quality:'min', mode:4, ar:0.3,  vl:0,
+   roman:'aug - sus4 - add9',        device:'sustained pads, celeste or bell motifs',
+   rhythm:'floating, near-pulseless', bpmLo:50, bpmHi:90,  traj:'static unanswered question'},
+  {name:'Sad',       hue:210, quality:'min', mode:4, ar:0.2,  vl:-1,
+   roman:'i - ♭VI - ♭III - ♭VII',   device:'descending melodic lines, sparse texture',
+   rhythm:'slow, minimal energy',    bpmLo:50,  bpmHi:80,  traj:'sustained grief, descending arc'},
+  {name:'Nostalgic', hue:250, quality:'min', mode:3, ar:0.3,  vl:0,
+   roman:'i - IV - ♭VII - i',        device:'acoustic piano or guitar, major IV over minor i',
+   rhythm:'gentle and flowing, 3/4', bpmLo:55,  bpmHi:85,  traj:'reflective, unresolved longing'},
+  // Neutral valence — high arousal
+  {name:'Running',   hue:185, quality:'min', mode:4, ar:0.9,  vl:0,
+   roman:'i - ♭VII - ♭VI - v',       device:'driving 8th-note motor, full rhythm section',
+   rhythm:'constant energetic groove', bpmLo:130, bpmHi:165, traj:'sustained neutral energy, no narrative peak'},
+  // Positive valence — low to high arousal
+  {name:'Romantic',  hue:340, quality:'maj', mode:0, ar:0.3,  vl:1,
+   roman:'I - V - vi - IV',          device:'lyrical strings or piano, legato phrasing',
+   rhythm:'flowing moderate, rubato', bpmLo:55,  bpmHi:90,  traj:'yearning rise and fall, tender'},
+  {name:'Hopeful',   hue:158, quality:'maj', mode:1, ar:0.35, vl:1,
+   roman:'I - V - II - I',           device:'ascending phrases, gradual swell',
+   rhythm:'sparse to fuller, building', bpmLo:70, bpmHi:100, traj:'forward-looking, builds toward light'},
+  {name:'Quirky',    hue:48,  quality:'maj', mode:1, ar:0.6,  vl:1,
+   roman:'I - ♭VII - IV - II',       device:'pizzicato, woodwinds, unexpected turns',
+   rhythm:'syncopation, odd accents', bpmLo:100, bpmHi:145, traj:'unpredictable, playful'},
+  {name:'Happy',     hue:45,  quality:'maj', mode:0, ar:0.25, vl:1,
+   roman:'I - IV - V - I',           device:'bright staccato, brass or woodwinds',
+   rhythm:'energetic staccato 8ths', bpmLo:120, bpmHi:165, traj:'bright celebratory energy, sustained'},
+  {name:'Heroic',    hue:28,  quality:'maj', mode:2, ar:0.8,  vl:1,
+   roman:'I - IV - ♭VII - I',        device:'brass fanfare, open perfect 4ths and 5ths',
+   rhythm:'driving march, building', bpmLo:100, bpmHi:140, traj:'struggle rising, striving not yet won'},
+  {name:'Triumph',   hue:36,  quality:'maj', mode:0, ar:0.85, vl:1,
+   roman:'IV - I - V - I',           device:'full tutti, sustained brass chords, choir',
+   rhythm:'broad declarative, slow harmonic rhythm', bpmLo:80, bpmHi:120, traj:'victory achieved, held at summit'}
 ];
 // DJ mixing moves - each maps current key→target using the Camelot grid. On the
 // circle of fifths a step of +1 slice = up a perfect fifth = +1 Camelot hour.
@@ -1436,6 +1474,12 @@ function moveMood(cs,cm,ts,tm){
   if(d>-3)    return 'darker';
   return 'much darker';
 }
+// Pitch shift label (for Feelings mode cards): "+3 st", "-2 st", "same pitch".
+// Shows how far you'd need to pitch-shift a track to reach this key.
+function pitchLabel(cs,ts){
+  var semi=(MROOT[ts]-MROOT[cs]+12)%12; if(semi>6) semi-=12;
+  return semi===0 ? 'same pitch' : (semi>0?'+':'')+semi+' st';
+}
 // Technical detail kept for the hover tooltip (pitch shift + modal colour).
 function moveTip(cs,cm,ts,tm,modeLabel){
   var semi=(MROOT[ts]-MROOT[cs]+12)%12; if(semi>6) semi-=12;
@@ -1468,9 +1512,16 @@ function assistSuggest(cs,cm,emoIdx){
   rows.sort(function(a,b){return b.score-a.score;});
   return rows.slice(0,4).map(function(s){
     var t=spliceTag(s.splice), ml=emo?MODES[emo.mode].name:'';
+    // Feelings mode: show pitch shift (unique per card, useful for library pitch-shifting).
+    // No emotion selected: show brightness delta (brighter/darker).
+    var why = emo ? pitchLabel(cs,s.slice) : moveMood(cs,cm,s.slice,s.min);
+    // Tooltip: brightness character + pitch shift + modal colour (all three).
+    var tip = emo
+      ? moveMood(cs,cm,s.slice,s.min)+' · '+pitchLabel(cs,s.slice)+(ml?' · '+ml+' colour':'')
+      : moveTip(cs,cm,s.slice,s.min,ml);
     return {slice:s.slice,min:s.min,name:(s.min?MINNAMES[s.slice]:MAJSHORT[s.slice]),
       cam:camelot(s.slice,s.min),tag:t.tag,th:t.th,
-      why:moveMood(cs,cm,s.slice,s.min), tip:moveTip(cs,cm,s.slice,s.min,ml),
+      why:why, tip:tip,
       modeIdx: emo?emo.mode:(s.min?4:0), modeLabel: ml};
   });
 }
@@ -1530,6 +1581,13 @@ function renderAssistPanel(){
         +'" onclick="setAssistEmotion('+i+')">'+EMOTIONS[i].name+'</button>';
     }
     h+='</div>';
+  }
+  if(assistStyle==='feelings' && assistEmotion!==null){
+    var re=EMOTIONS[assistEmotion];
+    h+='<div class="recipe-hint">'
+      +'<span>'+MODES[re.mode].name+'</span><span class="rh-dot">·</span>'
+      +'<span>'+re.bpmLo+'-'+re.bpmHi+' BPM</span><span class="rh-dot">·</span>'
+      +'<span>'+re.traj+'</span></div>';
   }
   if(cs!==null){
     var sg = assistStyle==='moves'
