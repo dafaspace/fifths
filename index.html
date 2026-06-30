@@ -31,7 +31,7 @@
 /* In light theme these controls used --bg (= page colour) and vanished. Give them
    white surfaces + a clearer border so they read against the page. */
 :root.light .mode-switcher { background: #ffffff; border: 0.5px solid var(--bd2); }
-:root.light .ms-btn { color: var(--text2); }
+:root.light .ms-btn:not(.active) { color: var(--text2); }
 :root.light .mbtn { background: #ffffff; border-color: var(--bd2); }
 :root.light .pal-btn, :root.light .seg, :root.light .seg-btn { background: #ffffff; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; overflow-x: hidden; }
@@ -632,21 +632,18 @@ function render() {
     ctx.arc(CX,CY,outerR,a0,a1);
     ctx.arc(CX,CY,innerR,a1,a0,true);
     ctx.closePath();
-    // High opacity so the TRUE colour shows in BOTH themes (low alpha over a dark bg
-    // muddied the hues). Selection is carried by a bright glowing border below, not
-    // by dimming the others.
+    // High opacity = TRUE colour in BOTH themes. Colours stay bright after a pick:
+    // faded sectors only step down slightly (no muddy dimming).
     var aOuter = (isSel && !selIsInner) ? 1.0
                : outerIsPRL             ? 0.97
-               : hovOuter ? 1.0 : inScale ? 0.95 : faded ? 0.50 : 0.95;
+               : hovOuter ? 1.0 : inScale ? 0.95 : faded ? 0.85 : 0.95;
     ctx.fillStyle = ha(col, aOuter);
     ctx.fill();
     if (isSel && !selIsInner) {
-      ctx.save();
-      ctx.shadowColor = dark ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.35)';
-      ctx.shadowBlur = 9;
-      ctx.strokeStyle = dark ? '#ffffff' : '#1a1a1a';
-      ctx.lineWidth = 2.6; ctx.stroke();
-      ctx.restore();
+      // Crisp double outline (dark halo + white line) - reads cleanly on any palette
+      // and theme, no fuzzy glow, even edges.
+      ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 3.6; ctx.stroke();
+      ctx.strokeStyle = '#ffffff';        ctx.lineWidth = 1.6; ctx.stroke();
     } else {
       ctx.strokeStyle = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.12)';
       ctx.lineWidth = 1.2; ctx.stroke();
@@ -671,16 +668,12 @@ function render() {
                  : hovInner    ? 0.92
                  : sameSecR    ? 0.92
                  : innerIsPRL  ? 0.92
-                 : faded ? 0.45 : 0.82;
+                 : faded ? 0.80 : 0.82;
       ctx.fillStyle = ha(col, aInner);
       ctx.fill();
       if (selIsInner) {
-        ctx.save();
-        ctx.shadowColor = dark ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.35)';
-        ctx.shadowBlur = 9;
-        ctx.strokeStyle = dark ? '#ffffff' : '#1a1a1a';
-        ctx.lineWidth = 2.4; ctx.stroke();
-        ctx.restore();
+        ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 3.4; ctx.stroke();
+        ctx.strokeStyle = '#ffffff';        ctx.lineWidth = 1.6; ctx.stroke();
       } else {
         ctx.strokeStyle = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
         ctx.lineWidth = 0.8; ctx.stroke();
