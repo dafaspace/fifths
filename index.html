@@ -41,7 +41,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
   body { height: 100dvh; min-height: 0; overflow: hidden; display: flex; flex-direction: column;
          max-width: 860px; margin-left: auto; margin-right: auto; }
   .layout { flex: 1; min-height: 0; align-items: stretch; }
-  .panel { max-height: 100%; }
+  .panel-col { min-height: 0; }
+  .panel { flex: 1 1 auto; min-height: 0; }
 }
 h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 
@@ -134,7 +135,7 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 /* Mode strip */
 /* Always reserves height (even empty) so the circle sits at the same spot in every
    tab. Centred so the strip lines up under the circle. */
-.mode-strip-wrap { min-height: 56px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; }
+.mode-strip-wrap { margin-bottom: 8px; display: flex; align-items: center; justify-content: center; }
 .mode-strip-label { font-size: 10px; color: var(--text3); margin-bottom: 5px; letter-spacing: .05em; }
 .mode-strip { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; padding-bottom: 2px; }
 .mode-strip::-webkit-scrollbar { height: 3px; }
@@ -161,13 +162,22 @@ h1 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 0; }
 
 /* Layout */
 .layout { display: grid; grid-template-columns: 1fr 256px; gap: 12px; align-items: start; }
-/* Mobile: lock to viewport and split height between circle and a scrolling panel,
-   so a phone shows everything compactly without page scroll. */
+.panel-col { display: flex; flex-direction: column; }
+/* Mobile: lock to viewport. Circle column is JUST the canvas (same spot every tab);
+   the panel column (mode strip + panel) takes the rest, sized to fit with no scroll. */
 @media (max-width: 620px) {
   body { height: 100dvh; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
   .layout { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
-  .layout > div:first-child { flex: 0 0 auto; }
+  .circle-col { flex: 0 0 auto; }
+  .panel-col { flex: 1 1 auto; min-height: 0; }
   .panel { flex: 1 1 auto; min-height: 0; }
+  /* Mode strip: one compact, horizontally-scrollable row. */
+  .mode-strip { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; }
+  .mode-strip-wrap { margin-top: 0; margin-bottom: 6px; }
+  /* Compact mood/relation tiles + tighter sections so the Assist panel fits. */
+  .etile { padding: 3px 7px; font-size: 9px; }
+  .assist-tiles { gap: 3px; }
+  .pbody { padding: 9px 11px; }
 }
 /* margin auto centers the circle when resize() shrinks it below the column width
    (e.g. Modal, where the mode strip eats height) - otherwise it left-aligns. */
@@ -263,17 +273,17 @@ canvas { display: block; width: 100%; margin-left: auto; margin-right: auto; cur
 <input type="checkbox" id="cb-minor" checked style="display:none">
 
 <div class="layout">
-  <div>
-    <!-- Modes (лады) live ABOVE the circle in its OWN column, so they centre under
-         the circle (not the whole page). The wrap reserves height in every tab, so
-         the circle sits at the same spot everywhere (no tab-switch jump); only
-         Modal fills it. -->
-    <div class="mode-strip-wrap" id="modestripwrap"><div class="mode-strip" id="modestrip"></div></div>
+  <div class="circle-col">
     <canvas id="c"></canvas>
   </div>
-  <div class="panel" id="panel">
-    <div class="phead">Info</div>
-    <div class="pbody"><div class="empty">Click a key on the circle</div></div>
+  <div class="panel-col">
+    <!-- Modes (лады) live in the PANEL column (above the panel), not the circle's
+         column - so the circle is at the SAME spot in every tab. Shown only in Modal. -->
+    <div class="mode-strip-wrap" id="modestripwrap" style="display:none"><div class="mode-strip" id="modestrip"></div></div>
+    <div class="panel" id="panel">
+      <div class="phead">Info</div>
+      <div class="pbody"><div class="empty">Click a key on the circle</div></div>
+    </div>
   </div>
 </div>
 
@@ -476,6 +486,7 @@ window.addEventListener('load', _updateThemeBtn);
 // slice = circle position (same as tonal centre with key signature)
 // modeIdx = which of the 7 modes to show
 var appMode     = 'tonal'; // 'tonal' | 'modal'
+var panelMore   = false;   // Tonal/Modal: reveal relations + quick nav + secondary doms
 var selected    = null;
 var hovered     = null; // { slice, isInner }
 var activeRel   = 'neighbours';
@@ -504,20 +515,15 @@ function resize() {
     var availH = window.innerHeight - top - below - 24;
     if (availH > 160) s = Math.min(s, availH);
   } else {
-    // Mobile: PANEL-FIRST sizing (option A - no scroll). Measure the panel's true
-    // content height and give the circle only the leftover, so the panel fits
-    // without scrolling. Clamp so the circle never vanishes or dominates; if the
-    // panel is genuinely taller than the screen, the circle hits its floor and the
-    // panel's own overflow is the last-resort fallback.
+    // Mobile: size the circle so the panel below can fully show (no scroll) - BUT
+    // never below a comfortable floor, so it's never "tiny". If the panel is genuinely
+    // huge it floors the circle and scrolls only the panel (page is 100dvh + hidden).
     var lay = cv.closest('.layout');
     if (lay) {
       var avail = window.innerHeight - lay.getBoundingClientRect().top - 12;
-      var panel = document.getElementById('panel');
-      var head  = panel ? panel.querySelector('.phead') : null;
-      var body  = panel ? panel.querySelector('.pbody') : null;
-      var need  = (head ? head.offsetHeight : 0) + (body ? body.scrollHeight : 0) + 4;
-      var leftover = need > 4 ? (avail - need - 8) : avail * 0.5;
-      s = Math.min(s, Math.max(170, Math.min(leftover, avail * 0.55)));
+      // FIXED fraction so the circle is the SAME size in every tab; panels are trimmed
+      // (More toggle, fewer cards on phone) to fit the remaining space with no scroll.
+      s = Math.min(s, avail * 0.38);
     }
   }
   cv.style.width  = s + 'px';
@@ -885,9 +891,11 @@ function getModeDataForSlice(slice, modeIdx) {
 
 function buildModeStrip() {
   var strip = document.getElementById('modestrip');
-  // Modes show only in Modal; elsewhere the strip stays empty but its wrap still
-  // reserves height, keeping the circle at the same position in every tab.
-  if (appMode !== 'modal') { strip.innerHTML = ''; return; }
+  var wrap  = document.getElementById('modestripwrap');
+  // Modes show only in Modal; elsewhere hide the strip entirely so its space goes to
+  // the circle / panel (no wasted empty band, esp. on mobile).
+  if (appMode !== 'modal') { strip.innerHTML = ''; if (wrap) wrap.style.display = 'none'; return; }
+  if (wrap) wrap.style.display = '';
   if (!selected) {
     // No selection: show generic mode names without notes
     var html = '';
@@ -936,6 +944,13 @@ function buildModeStrip() {
   }
   strip.innerHTML = html;
 }
+
+function togglePanelMore() {
+  panelMore = !panelMore;
+  updatePanel();
+  if (typeof resize === 'function') resize();
+}
+window.togglePanelMore = togglePanelMore;
 
 function setModeByBtn(modeIdx) {
   lastModeIdx = modeIdx;
@@ -1117,20 +1132,25 @@ function updatePanel() {
       '<div class="slabel">Diatonic chords</div>' +
       '<div class="chord-grid">'+chordsHTML+'</div>' +
 
-      '<div class="slabel">'+rel.label+'</div>' +
-      '<div class="rel-desc">'+rel.desc+'</div>' +
-      '<div class="hl-list">'+hlHTML+'</div>' +
+      // Secondary info (relations, quick nav, secondary dominants) is opt-in so the
+      // default panel stays short enough to fit a phone with NO scroll.
+      '<button class="more-btn" onclick="togglePanelMore()">'+(panelMore?'Less':'More')+'</button>' +
+      '<div class="panel-more"'+(panelMore?'':' style="display:none"')+'>' +
+        '<div class="slabel">'+rel.label+'</div>' +
+        '<div class="rel-desc">'+rel.desc+'</div>' +
+        '<div class="hl-list">'+hlHTML+'</div>' +
 
-      '<div class="slabel">Quick nav</div>' +
-      '<div class="nav-grid">' +
-        '<div class="ni" onclick="goKey('+actualSlice+',0)"><div class="nl">Parallel major</div><div class="nk">'+parIonian+'</div></div>' +
-        '<div class="ni" onclick="goKey('+actualSlice+',4)"><div class="nl">Parallel minor</div><div class="nk">'+parAeolian+'</div></div>' +
-        '<div class="ni" onclick="goKey('+domSlice+','+modeIdx+')"><div class="nl">Dominant</div><div class="nk">'+domName+'</div></div>' +
-        '<div class="ni" onclick="goKey('+subSlice+','+modeIdx+')"><div class="nl">Subdominant</div><div class="nk">'+subName+'</div></div>' +
+        '<div class="slabel">Quick nav</div>' +
+        '<div class="nav-grid">' +
+          '<div class="ni" onclick="goKey('+actualSlice+',0)"><div class="nl">Parallel major</div><div class="nk">'+parIonian+'</div></div>' +
+          '<div class="ni" onclick="goKey('+actualSlice+',4)"><div class="nl">Parallel minor</div><div class="nk">'+parAeolian+'</div></div>' +
+          '<div class="ni" onclick="goKey('+domSlice+','+modeIdx+')"><div class="nl">Dominant</div><div class="nk">'+domName+'</div></div>' +
+          '<div class="ni" onclick="goKey('+subSlice+','+modeIdx+')"><div class="nl">Subdominant</div><div class="nk">'+subName+'</div></div>' +
+        '</div>' +
+
+        '<div class="slabel">Secondary dominants</div>' +
+        '<div class="sec-dom"><div class="sd-list">'+sdHTML+'</div></div>' +
       '</div>' +
-
-      '<div class="slabel">Secondary dominants</div>' +
-      '<div class="sec-dom"><div class="sd-list">'+sdHTML+'</div></div>' +
     '</div>';
 }
 
@@ -1731,7 +1751,8 @@ function renderAssistPanel(){
       var lbl = assistStyle==='dj' ? 'Where to go' : 'Next key';
       // Moods: show 6 (the closely-related palette real music mostly uses), the rest
       // - bolder/distant keys - hide behind "More". DJ shows all its move targets.
-      var cap = (assistStyle==='dj') ? sg.length : (assistShowMore ? sg.length : Math.min(6, sg.length));
+      var defN = window.innerWidth <= 620 ? 3 : 6;   // fewer on a phone so it fits with no scroll
+      var cap = (assistStyle==='dj') ? sg.length : (assistShowMore ? sg.length : Math.min(defN, sg.length));
       h+='<div class="slabel" style="margin-top:11px">'+lbl+'</div><div class="sugg-list">';
       for(var j=0;j<cap;j++){ var s=sg[j];
         h+='<button class="sugg-card" title="'+s.tip+'" onclick="assistPick('+s.slice+','+(s.min?1:0)+','+s.modeIdx+')">'
@@ -1740,7 +1761,7 @@ function renderAssistPanel(){
           +'<span class="sugg-hard">'+s.hard+'</span></button>';
       }
       h+='</div>';
-      if(assistStyle!=='dj' && sg.length>6){
+      if(assistStyle!=='dj' && sg.length>defN){
         h+='<button class="more-btn" onclick="toggleAssistMore()">'+(assistShowMore?'Less':'More - bolder keys')+'</button>';
       }
     }
