@@ -573,7 +573,8 @@ function render() {
   var slA       = 2 * Math.PI / 12;
   // FIXED radii so the major ring is the SAME thickness in every tab (Modal too) and
   // major = minor thickness (0.30R each). Minor band is just left empty when hidden.
-  var outerR    = R;
+  var outerR    = R - 4;             // leave a margin so the selection border (drawn
+                                     // on the outer edge) isn't clipped by the canvas
   var innerR    = R * 0.70;          // major / minor boundary
   var accR      = R * 0.40;          // accidentals-ring outer (minor inner boundary)
   var accLabelR = R * 0.285;         // radius for the accidental-count labels
