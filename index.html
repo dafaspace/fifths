@@ -28,6 +28,12 @@
   --bd: rgba(0,0,0,0.10); --bd2: rgba(0,0,0,0.16);
 }
 :root.light .panel { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+/* In light theme these controls used --bg (= page colour) and vanished. Give them
+   white surfaces + a clearer border so they read against the page. */
+:root.light .mode-switcher { background: #ffffff; border: 0.5px solid var(--bd2); }
+:root.light .ms-btn { color: var(--text2); }
+:root.light .mbtn { background: #ffffff; border-color: var(--bd2); }
+:root.light .pal-btn, :root.light .seg, :root.light .seg-btn { background: #ffffff; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; overflow-x: hidden; }
 /* Two-column (desktop/tablet): lock to viewport height so the page never scrolls;
    the circle is fitted to the available height and the detail panel scrolls itself. */
@@ -240,7 +246,7 @@ canvas { display: block; width: 100%; margin-left: auto; margin-right: auto; cur
       <button class="pal-btn" id="pal-pastel"   onclick="setPalette('pastel')"   title="Soft muted pastels">Pastel</button>
       <button class="pal-btn" id="pal-itten"    onclick="setPalette('itten')"    title="Itten RYB - true complements">Itten</button>
       <button class="pal-btn" id="pal-scriabin" onclick="setPalette('scriabin')" title="Scriabin's synesthetic keys">Scriabin</button>
-      <button class="pal-btn" id="pal-mono"     onclick="setPalette('mono')"     title="One hue, position = brightness">Mono</button>
+      <button class="pal-btn" id="pal-zodiac"   onclick="setPalette('zodiac')"   title="Colour by zodiac element (Fire/Earth/Air/Water)">Zodiac</button>
       <button class="pal-btn" id="pal-zebra"    onclick="setPalette('zebra')"    title="Alternating light / dark">Zebra</button>
     </div>
   </div>
@@ -284,11 +290,16 @@ var PALETTES = {
   itten:    ['#E3000F','#EF4E1C','#F47E1B','#FBB034','#F6E500','#8DC63F','#1FA64A','#00A99D','#0061A8','#2E3192','#662D91','#A21D6B'],
   // Scriabin's described colours (verbal originals; E=sky blue, E♭=steely, B♭=rose, F=deep red).
   scriabin: ['#E00000','#F08000','#F0E000','#1FAF3D','#7FC3E0','#2030C8','#3A5FE0','#7A28C0','#A850B8','#A89498','#CC7A96','#9A0000'],
-  mono:     ['#BDB0CF','#B5A6C9','#A290BB','#8871A8','#6E578E','#5D4A78','#56446F','#5D4A78','#6E578E','#8871A8','#A290BB','#B5A6C9'],
-  zebra:    ['#C6C6CE','#4E4F59','#C6C6CE','#4E4F59','#C6C6CE','#4E4F59','#C6C6CE','#4E4F59','#C6C6CE','#4E4F59','#C6C6CE','#4E4F59']
+  // Zodiac: colour by ELEMENT (Steiner tone-zodiac). Fire=red, Earth=green,
+  // Air=gold, Water=blue. The 3 signs of each element are 120° apart (the trine =
+  // augmented triad), so the four colours form a visible 4-cycle around the wheel.
+  zodiac:   ['#D9433A','#4A9D5B','#D9B23D','#3D77C8','#C8362E','#3D8A4D','#C8A032','#3568B0','#E85248','#57AD68','#E8C24A','#4A86D9'],
+  zebra:    ['#DCDCE4','#38383F','#DCDCE4','#38383F','#DCDCE4','#38383F','#DCDCE4','#38383F','#DCDCE4','#38383F','#DCDCE4','#38383F']
 };
-var PALETTE_NAMES = ['pastel','itten','scriabin','mono','zebra'];
-var SYNTH = PALETTES[loadPref('palette','pastel')] || PALETTES.pastel;
+var PALETTE_NAMES = ['pastel','itten','scriabin','zodiac','zebra'];
+var GREY_PALETTES = { zebra:1 };   // skip the dark-theme white-lift for the greyscale one
+var curPalette = loadPref('palette','pastel');
+var SYNTH = PALETTES[curPalette] || PALETTES.pastel;
 // Root in semitones for each circle position
 var MROOT    = [0,7,2,9,4,11,6,1,8,3,10,5];
 var NOTES_SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
@@ -395,6 +406,7 @@ window.setNotation = setNotation;
 function setPalette(name) {
   if (!PALETTES[name]) return;
   SYNTH = PALETTES[name];
+  curPalette = name;
   savePref('palette', name);
   updatePaletteSeg();
   render(); updatePanel();
@@ -521,6 +533,14 @@ function ha(hex, a) {
   var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
   return 'rgba('+r+','+g+','+b+','+a+')';
 }
+// Mix a hex colour toward white by t (0..1). A dark background perceptually mutes
+// a colour vs a light one, so we lift the palette in dark theme to match how the
+// SAME colours read in light theme.
+function lightenHex(hex, t) {
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  function up(v){ return ('0'+Math.round(v+(255-v)*t).toString(16)).slice(-2); }
+  return '#'+up(r)+up(g)+up(b);
+}
 function isDark() { return !document.documentElement.classList.contains('light'); }
 
 // Which circle slices belong to the current tonal family (7 notes of the parent major)
@@ -591,7 +611,9 @@ function render() {
   for (var i = 0; i < 12; i++) {
     var a0 = (-Math.PI/2) + i*slA - slA/2;
     var a1 = a0 + slA;
-    var col = SYNTH[i];
+    // Lift toward white in dark theme so colours pop as they do in light theme
+    // (skip the greyscale palettes - lifting them would kill their contrast).
+    var col = (dark && !GREY_PALETTES[curPalette]) ? lightenHex(SYNTH[i], 0.16) : SYNTH[i];
 
     var isSel    = selected && selected.slice === i;
     var inScale  = !!scaleHL[i];
@@ -610,15 +632,25 @@ function render() {
     ctx.arc(CX,CY,outerR,a0,a1);
     ctx.arc(CX,CY,innerR,a1,a0,true);
     ctx.closePath();
-    var aOuter = (isSel && !selIsInner) ? 0.92
-               : outerIsPRL             ? 0.70
-               : hovOuter ? 0.76 : inScale ? 0.68 : faded ? 0.44 : 0.60;
-    // Light bg blends toward white; a gentle boost keeps the pastels from washing out.
-    if (!dark) aOuter = Math.min(1, aOuter * 1.22);
+    // High opacity so the TRUE colour shows in BOTH themes (low alpha over a dark bg
+    // muddied the hues). Selection is carried by a bright glowing border below, not
+    // by dimming the others.
+    var aOuter = (isSel && !selIsInner) ? 1.0
+               : outerIsPRL             ? 0.97
+               : hovOuter ? 1.0 : inScale ? 0.95 : faded ? 0.50 : 0.95;
     ctx.fillStyle = ha(col, aOuter);
     ctx.fill();
-    ctx.strokeStyle = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.12)';
-    ctx.lineWidth = 1.2; ctx.stroke();
+    if (isSel && !selIsInner) {
+      ctx.save();
+      ctx.shadowColor = dark ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.35)';
+      ctx.shadowBlur = 9;
+      ctx.strokeStyle = dark ? '#ffffff' : '#1a1a1a';
+      ctx.lineWidth = 2.6; ctx.stroke();
+      ctx.restore();
+    } else {
+      ctx.strokeStyle = dark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.12)';
+      ctx.lineWidth = 1.2; ctx.stroke();
+    }
 
     // Ring separator
     ctx.beginPath(); ctx.arc(CX,CY,innerR,a0,a1);
@@ -633,16 +665,26 @@ function render() {
       ctx.arc(CX,CY,accR,a1,a0,true);
       ctx.closePath();
       var innerIsPRL = isPRLTarget && prlTargetInner;
-      var aInner = selIsInner  ? 0.88
-                 : hovInner    ? 0.58
-                 : sameSecR    ? 0.58
-                 : innerIsPRL  ? 0.60
-                 : faded ? 0.34 : 0.48;
-      if (!dark) aInner = Math.min(1, aInner * 1.22);
+      // Minor ring sits a touch below the major ring in opacity so it reads as
+      // secondary, but still shows the true colour in both themes.
+      var aInner = selIsInner  ? 1.0
+                 : hovInner    ? 0.92
+                 : sameSecR    ? 0.92
+                 : innerIsPRL  ? 0.92
+                 : faded ? 0.45 : 0.82;
       ctx.fillStyle = ha(col, aInner);
       ctx.fill();
-      ctx.strokeStyle = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
-      ctx.lineWidth = 0.8; ctx.stroke();
+      if (selIsInner) {
+        ctx.save();
+        ctx.shadowColor = dark ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.35)';
+        ctx.shadowBlur = 9;
+        ctx.strokeStyle = dark ? '#ffffff' : '#1a1a1a';
+        ctx.lineWidth = 2.4; ctx.stroke();
+        ctx.restore();
+      } else {
+        ctx.strokeStyle = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
+        ctx.lineWidth = 0.8; ctx.stroke();
+      }
     }
 
     // Accidentals ring - outer arc boundary
@@ -734,7 +776,7 @@ function render() {
         ctx.translate(CX + Math.cos(midA)*accLabelR, CY + Math.sin(midA)*accLabelR);
         ctx.font = '400 ' + Math.max(8, R*0.042) + 'px ' + ff;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = dark ? 'rgba(255,255,255,.32)' : 'rgba(0,0,0,.28)';
+        ctx.fillStyle = dark ? 'rgba(255,255,255,.34)' : 'rgba(0,0,0,.55)';
         ctx.fillText(acc, 0, 0);
         ctx.restore();
       }
