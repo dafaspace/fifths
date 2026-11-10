@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Keymood</title>
+<meta name="robots" content="noindex">
+<link rel="manifest" href="./manifest.json">
+<!--
+  The bridge left at dafaspace.github.io/fifths/ after the repo was renamed to
+  keymood (10 Nov 2026). Every installed shortcut and old link lands here.
+  It sends the visitor on to the app with the same ?key=... and #hash. The app
+  is on the same origin at /keymood/, so saved settings are still there; the app
+  itself hands them over when it moves on to keymood.app. Keep this repo until
+  Nov 2027 at least: home-screen shortcuts outlive plans.
+-->
+<style>
+:root{--bg:#f4f1ea;--fg:#1c1c1a;--mut:#5e5a56}
+@media (prefers-color-scheme:dark){:root{--bg:#1c1c1a;--fg:#ecebe6;--mut:#a3a19b}}
+html{background:var(--bg);color:var(--fg);font:17px/1.45 system-ui,-apple-system,sans-serif}
+body{margin:0;padding:max(48px,env(safe-area-inset-top)) 20px 40px;max-width:460px;margin-inline:auto}
+p{color:var(--mut)}
+a{color:var(--fg)}
+</style>
+<script>location.replace('../keymood/' + location.search + location.hash);</script>
+<p>Another Circle of Fifths is now Keymood. <a href="../keymood/">Open Keymood</a></p>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(function(){});</script>

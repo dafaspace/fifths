@@ -1,0 +1,12 @@
+{
+  "name": "Keymood",
+  "short_name": "Keymood",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1c1c1a",
+  "theme_color": "#1c1c1a",
+  "icons": [
+    { "src": "../keymood/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
